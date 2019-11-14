@@ -1,0 +1,12 @@
+entities\MessageToUserPK_.class
+entities\Message_.class
+service\MessageFacade.class
+service\AbstractFacade.class
+service\RESTService.class
+entities\MessageToUser.class
+entities\Message.class
+entities\SystemUser_.class
+entities\MessageToUser_.class
+entities\MessageToUserPK.class
+entities\SystemUser.class
+service\MessageStoreResource.class
