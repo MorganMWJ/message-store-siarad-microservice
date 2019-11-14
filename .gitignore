@@ -2,6 +2,7 @@
 build/
 bin/
 target/
+MessageStore/target/
 libs/
 tmp/
 node_modules/
