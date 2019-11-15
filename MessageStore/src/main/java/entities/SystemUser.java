@@ -6,7 +6,7 @@
 package entities;
 
 import java.io.Serializable;
-import java.util.List;
+import java.util.Collection;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -29,8 +29,8 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "system_user")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "SystemUser.findAll", query = "SELECT s FROM SystemUser s"),
-    @NamedQuery(name = "SystemUser.findByUid", query = "SELECT s FROM SystemUser s WHERE s.uid = :uid")})
+    @NamedQuery(name = "SystemUser.findAll", query = "SELECT s FROM SystemUser s")
+    , @NamedQuery(name = "SystemUser.findByUid", query = "SELECT s FROM SystemUser s WHERE s.uid = :uid")})
 public class SystemUser implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -41,9 +41,9 @@ public class SystemUser implements Serializable {
     @Column(name = "uid")
     private String uid;
     @OneToMany(mappedBy = "userUid")
-    private List<Message> messageList;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "systemUser")
-    private List<MessageToUser> messageToUserList;
+    private Collection<Message> messageCollection;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userUid")
+    private Collection<MessageToUser> messageToUserCollection;
 
     public SystemUser() {
     }
@@ -61,21 +61,21 @@ public class SystemUser implements Serializable {
     }
 
     @XmlTransient
-    public List<Message> getMessageList() {
-        return messageList;
+    public Collection<Message> getMessageCollection() {
+        return messageCollection;
     }
 
-    public void setMessageList(List<Message> messageList) {
-        this.messageList = messageList;
+    public void setMessageCollection(Collection<Message> messageCollection) {
+        this.messageCollection = messageCollection;
     }
 
     @XmlTransient
-    public List<MessageToUser> getMessageToUserList() {
-        return messageToUserList;
+    public Collection<MessageToUser> getMessageToUserCollection() {
+        return messageToUserCollection;
     }
 
-    public void setMessageToUserList(List<MessageToUser> messageToUserList) {
-        this.messageToUserList = messageToUserList;
+    public void setMessageToUserCollection(Collection<MessageToUser> messageToUserCollection) {
+        this.messageToUserCollection = messageToUserCollection;
     }
 
     @Override

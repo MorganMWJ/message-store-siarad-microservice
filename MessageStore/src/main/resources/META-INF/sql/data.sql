@@ -1,0 +1,3 @@
+DELETE FROM message;
+INSERT INTO message (id, body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES (1,'First Message Body',1,false,false,'2019-11-15 21:09:44.490','2019-11-15 21:09:44.490');
+INSERT INTO message (id, body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES (2,'Second Message Body Content',1,false,false,'2019-11-15 21:31:44.490','2019-11-15 21:31:44.490');

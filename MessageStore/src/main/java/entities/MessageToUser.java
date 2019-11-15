@@ -8,8 +8,8 @@ package entities;
 import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
-import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
@@ -26,17 +26,19 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Table(name = "message_to_user")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "MessageToUser.findAll", query = "SELECT m FROM MessageToUser m"),
-    @NamedQuery(name = "MessageToUser.findByMessageId", query = "SELECT m FROM MessageToUser m WHERE m.messageToUserPK.messageId = :messageId"),
-    @NamedQuery(name = "MessageToUser.findByUserUid", query = "SELECT m FROM MessageToUser m WHERE m.messageToUserPK.userUid = :userUid"),
-    @NamedQuery(name = "MessageToUser.findByIsTagged", query = "SELECT m FROM MessageToUser m WHERE m.isTagged = :isTagged"),
-    @NamedQuery(name = "MessageToUser.findByHasSeen", query = "SELECT m FROM MessageToUser m WHERE m.hasSeen = :hasSeen"),
-    @NamedQuery(name = "MessageToUser.findByHasBeenNotified", query = "SELECT m FROM MessageToUser m WHERE m.hasBeenNotified = :hasBeenNotified")})
+    @NamedQuery(name = "MessageToUser.findAll", query = "SELECT m FROM MessageToUser m")
+    , @NamedQuery(name = "MessageToUser.findByMessageToUserId", query = "SELECT m FROM MessageToUser m WHERE m.messageToUserId = :messageToUserId")
+    , @NamedQuery(name = "MessageToUser.findByIsTagged", query = "SELECT m FROM MessageToUser m WHERE m.isTagged = :isTagged")
+    , @NamedQuery(name = "MessageToUser.findByHasSeen", query = "SELECT m FROM MessageToUser m WHERE m.hasSeen = :hasSeen")
+    , @NamedQuery(name = "MessageToUser.findByHasBeenNotified", query = "SELECT m FROM MessageToUser m WHERE m.hasBeenNotified = :hasBeenNotified")})
 public class MessageToUser implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    @EmbeddedId
-    protected MessageToUserPK messageToUserPK;
+    @Id
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "message_to_user_id")
+    private Integer messageToUserId;
     @Basic(optional = false)
     @NotNull
     @Column(name = "is_tagged")
@@ -49,37 +51,33 @@ public class MessageToUser implements Serializable {
     @NotNull
     @Column(name = "has_been_notified")
     private boolean hasBeenNotified;
-    @JoinColumn(name = "message_id", referencedColumnName = "id", insertable = false, updatable = false)
+    @JoinColumn(name = "message_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
-    private Message message;
-    @JoinColumn(name = "user_uid", referencedColumnName = "uid", insertable = false, updatable = false)
+    private Message messageId;
+    @JoinColumn(name = "user_uid", referencedColumnName = "uid")
     @ManyToOne(optional = false)
-    private SystemUser systemUser;
+    private SystemUser userUid;
 
     public MessageToUser() {
     }
 
-    public MessageToUser(MessageToUserPK messageToUserPK) {
-        this.messageToUserPK = messageToUserPK;
+    public MessageToUser(Integer messageToUserId) {
+        this.messageToUserId = messageToUserId;
     }
 
-    public MessageToUser(MessageToUserPK messageToUserPK, boolean isTagged, boolean hasSeen, boolean hasBeenNotified) {
-        this.messageToUserPK = messageToUserPK;
+    public MessageToUser(Integer messageToUserId, boolean isTagged, boolean hasSeen, boolean hasBeenNotified) {
+        this.messageToUserId = messageToUserId;
         this.isTagged = isTagged;
         this.hasSeen = hasSeen;
         this.hasBeenNotified = hasBeenNotified;
     }
 
-    public MessageToUser(int messageId, String userUid) {
-        this.messageToUserPK = new MessageToUserPK(messageId, userUid);
+    public Integer getMessageToUserId() {
+        return messageToUserId;
     }
 
-    public MessageToUserPK getMessageToUserPK() {
-        return messageToUserPK;
-    }
-
-    public void setMessageToUserPK(MessageToUserPK messageToUserPK) {
-        this.messageToUserPK = messageToUserPK;
+    public void setMessageToUserId(Integer messageToUserId) {
+        this.messageToUserId = messageToUserId;
     }
 
     public boolean getIsTagged() {
@@ -106,26 +104,26 @@ public class MessageToUser implements Serializable {
         this.hasBeenNotified = hasBeenNotified;
     }
 
-    public Message getMessage() {
-        return message;
+    public Message getMessageId() {
+        return messageId;
     }
 
-    public void setMessage(Message message) {
-        this.message = message;
+    public void setMessageId(Message messageId) {
+        this.messageId = messageId;
     }
 
-    public SystemUser getSystemUser() {
-        return systemUser;
+    public SystemUser getUserUid() {
+        return userUid;
     }
 
-    public void setSystemUser(SystemUser systemUser) {
-        this.systemUser = systemUser;
+    public void setUserUid(SystemUser userUid) {
+        this.userUid = userUid;
     }
 
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (messageToUserPK != null ? messageToUserPK.hashCode() : 0);
+        hash += (messageToUserId != null ? messageToUserId.hashCode() : 0);
         return hash;
     }
 
@@ -136,7 +134,7 @@ public class MessageToUser implements Serializable {
             return false;
         }
         MessageToUser other = (MessageToUser) object;
-        if ((this.messageToUserPK == null && other.messageToUserPK != null) || (this.messageToUserPK != null && !this.messageToUserPK.equals(other.messageToUserPK))) {
+        if ((this.messageToUserId == null && other.messageToUserId != null) || (this.messageToUserId != null && !this.messageToUserId.equals(other.messageToUserId))) {
             return false;
         }
         return true;
@@ -144,7 +142,7 @@ public class MessageToUser implements Serializable {
 
     @Override
     public String toString() {
-        return "entities.MessageToUser[ messageToUserPK=" + messageToUserPK + " ]";
+        return "entities.MessageToUser[ messageToUserId=" + messageToUserId + " ]";
     }
     
 }

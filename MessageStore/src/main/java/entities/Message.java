@@ -6,12 +6,14 @@
 package entities;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -34,18 +36,19 @@ import javax.xml.bind.annotation.XmlTransient;
 @Table(name = "message")
 @XmlRootElement
 @NamedQueries({
-    @NamedQuery(name = "Message.findAll", query = "SELECT m FROM Message m"),
-    @NamedQuery(name = "Message.findById", query = "SELECT m FROM Message m WHERE m.id = :id"),
-    @NamedQuery(name = "Message.findByBody", query = "SELECT m FROM Message m WHERE m.body = :body"),
-    @NamedQuery(name = "Message.findByIsDeleted", query = "SELECT m FROM Message m WHERE m.isDeleted = :isDeleted"),
-    @NamedQuery(name = "Message.findByHasReplies", query = "SELECT m FROM Message m WHERE m.hasReplies = :hasReplies"),
-    @NamedQuery(name = "Message.findByTimeCreated", query = "SELECT m FROM Message m WHERE m.timeCreated = :timeCreated"),
-    @NamedQuery(name = "Message.findByTimeEdited", query = "SELECT m FROM Message m WHERE m.timeEdited = :timeEdited"),
-    @NamedQuery(name = "Message.findByGroupId", query = "SELECT m FROM Message m WHERE m.groupId = :groupId")})
+    @NamedQuery(name = "Message.findAll", query = "SELECT m FROM Message m")
+    , @NamedQuery(name = "Message.findById", query = "SELECT m FROM Message m WHERE m.id = :id")
+    , @NamedQuery(name = "Message.findByBody", query = "SELECT m FROM Message m WHERE m.body = :body")
+    , @NamedQuery(name = "Message.findByIsDeleted", query = "SELECT m FROM Message m WHERE m.isDeleted = :isDeleted")
+    , @NamedQuery(name = "Message.findByHasReplies", query = "SELECT m FROM Message m WHERE m.hasReplies = :hasReplies")
+    , @NamedQuery(name = "Message.findByTimeCreated", query = "SELECT m FROM Message m WHERE m.timeCreated = :timeCreated")
+    , @NamedQuery(name = "Message.findByTimeEdited", query = "SELECT m FROM Message m WHERE m.timeEdited = :timeEdited")
+    , @NamedQuery(name = "Message.findByGroupId", query = "SELECT m FROM Message m WHERE m.groupId = :groupId")})
 public class Message implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
+    @GeneratedValue(strategy=GenerationType.AUTO)
     @Basic(optional = false)
     @NotNull
     @Column(name = "id")
@@ -78,15 +81,15 @@ public class Message implements Serializable {
     @Column(name = "group_id")
     private int groupId;
     @OneToMany(mappedBy = "parentMessageId")
-    private List<Message> messageList;
+    private Collection<Message> messageCollection;
     @JoinColumn(name = "parent_message_id", referencedColumnName = "id")
     @ManyToOne
     private Message parentMessageId;
     @JoinColumn(name = "user_uid", referencedColumnName = "uid")
     @ManyToOne
     private SystemUser userUid;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "message")
-    private List<MessageToUser> messageToUserList;
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "messageId")
+    private Collection<MessageToUser> messageToUserCollection;
 
     public Message() {
     }
@@ -162,12 +165,12 @@ public class Message implements Serializable {
     }
 
     @XmlTransient
-    public List<Message> getMessageList() {
-        return messageList;
+    public Collection<Message> getMessageCollection() {
+        return messageCollection;
     }
 
-    public void setMessageList(List<Message> messageList) {
-        this.messageList = messageList;
+    public void setMessageCollection(Collection<Message> messageCollection) {
+        this.messageCollection = messageCollection;
     }
 
     public Message getParentMessageId() {
@@ -187,12 +190,12 @@ public class Message implements Serializable {
     }
 
     @XmlTransient
-    public List<MessageToUser> getMessageToUserList() {
-        return messageToUserList;
+    public Collection<MessageToUser> getMessageToUserCollection() {
+        return messageToUserCollection;
     }
 
-    public void setMessageToUserList(List<MessageToUser> messageToUserList) {
-        this.messageToUserList = messageToUserList;
+    public void setMessageToUserCollection(Collection<MessageToUser> messageToUserCollection) {
+        this.messageToUserCollection = messageToUserCollection;
     }
 
     @Override

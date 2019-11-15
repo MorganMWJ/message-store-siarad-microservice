@@ -1,0 +1,64 @@
+Notes on JavaEE Persistence:
+
+Steps
+======
+1) Ensure you have PostgreSQL installed and a PostgreSQL database accepting connections
+	a) 'psql' command line tool to set up database and tables (alternatively use pgadmin GUI)
+	b) 'postgres' command line tool to run PostgreSQL database server (alternatively use pgadmin GUI)
+	
+2) Add the PostgreSQL JDBC Driver to Glassfish
+	a) Download the JDBC driver for PostgreSQL (it is a .jar file) from http://jdbc.postgresql.org
+	b) Copy it into the lib directory of the domain of your glassfish installation 
+	
+3) Create JDBC connection pool in glassfish server and test it via a ping
+	a) Use 'asadmin create-jdbc-connection-pool' command to create JDBC connection pool
+		Example (all one command):
+			asadmin create-jdbc-connection-pool 
+			--datasourceclassname org.postgresql.ds.PGConnectionPoolDataSource 
+			--restype javax.sql.ConnectionPoolDataSource 
+			--property User=morgan:
+			PortNumber:5432
+			Password=dbpassword:
+			ServerName=localhost:
+			DatabaseName=blahblah
+			my_database-pool
+	b) Use 'asadmin ping-connection-pool' to test connection is made between glassfish & PostgreSQl servers
+		Example: 
+			asadmin ping-connection-pool my_database-pool (alternatively use Glassfish Admin WebApp)
+		
+4) Create JDBC Resource in Glassfish server
+	a) Use 'asadmin create-jdbc-resource' or Glassfish admin WebApp to create new JDBC resource
+	Example: 
+		asadmin create-jdbc-resource --connectionpoolid my_database-pool jdbc/my_database
+	(applications deployed on the glassfish server will use this resource name to access the PostgreSQL database)
+	
+5) If using Eclipse: 
+	a) Add a new database connection in eclipse to connect the IDE to the database for this project.
+	Need to specify a JDBC driver for your RBDMS and the connection details for your database.
+	This time we are providing these details to the eclipse IDE. Use the same driver .jar you put in the glassfish domain/lib folder.
+	b) Connect to this new database and you should see the DB with its tables listed in the Eclipse 'Database Development' view.
+	c) Back in the JavaEE Eclipse view, Mark the JPA in project facets under project properties.
+	Select as the connection option the connection you just added in the 'Database Development' view
+	This adds options, files and structure to the project that are specific to using the JPA.
+	d) You can now right click on the project to do either code first or DB first ORM development:
+		JPA Tools -> Generate entities from tables
+		JPA Tools -> Generate tables from entities
+		
+	
+
+Note on javax.persistence dependency
+====================================	
+In order for ORM code you write or generate to compile the project must have a JPA (javax.persistence-api) as a .jar dependency
+It is recommended to use Maven for managing project dependencies. I got stuck on this while using the eclipse IDE (with the m2e maven plugin).
+To add in a dependency you need to know the groupID, atifactID & version.
+Example (in pom.xml): 
+  	<dependency>
+  		<groupId>javax.persistence</groupId>
+  		<artifactId>javax.persistence-api</artifactId>
+  		<version>2.2</version>
+  	</dependency>
+	
+However Maven will not be able to resolve these identifiers if it does not know where to look.
+It needs to have the URL of a Maven repository, in my eclipse it is: central (https://repo.maven.apache.org/maven2)
+Maven also needs to index that repository on your machine. I was stuck because Maven needed could not resolve my dependency
+because it needed to update its index. I fixed this by clicking 'Rebuild Index' on the 'Maven Repositories' view in eclipse. 
