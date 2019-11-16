@@ -6,7 +6,10 @@
 package service;
 
 import entities.Message;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -22,101 +25,135 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
 
 /**
- * 
- * @author nwh
+ * REST service/API provided for Message Store Resource.
+ * @author Morgan Jones
  */
 @Stateless
 @Path("messages")
 public class MessageFacadeREST extends AbstractFacade<Message> {
+    
+    /**
+     * Entity Manager to interact with persistence context (PostgreSQL Database).
+     */
     @PersistenceContext(unitName = "com.mycompany_RestJpa_war_1.0-SNAPSHOTPU")
     private EntityManager em;
     
     /**
-     * Use uriInfo to get current context path and to build HATEOAS links 
+     * Use uriInfo to get current context path and to build HATEOAS links.
     * */
     @Context
     UriInfo uriInfo;
+    
+    /**
+     * Logger.
+     */
+    private final static Logger LOG = Logger.getLogger(MessageFacadeREST.class.getName());
 
     public MessageFacadeREST() {
         super(Message.class);
+        LOG.setLevel(Level.ALL);
     }
 
     /**
-     *
-     * @param entity
-     * @return
+     * Creates a new message.
+     * @param entity - message to be created.
+     * @return 201 Created HTTP response upon successful creation.
      */
     @POST
     @Consumes({"application/xml", "application/json"})
     public Response createMessage(Message entity) {
-//        if(entity == null)  {
-//            return Response.status(Response.Status.BAD_REQUEST)
-//                .entity("Config content not found")
-//                .build();
-//        }
- 
+        LOG.log(Level.INFO, "ENTRY to createMessage() action. Reponding to POST: {0}", entity);
+        
         super.create(entity);
+        LOG.info("Message successfully created.");
+        
         Link lnk = Link.fromUri(uriInfo.getPath() + "/" + entity.getId()).rel("self").build();
-        return Response.status(javax.ws.rs.core.Response.Status.CREATED).location(lnk.getUri()).build();
+        return Response.status(Response.Status.CREATED).location(lnk.getUri()).build();
     }
 
+    /**
+     * Updates a single message.
+     * @param id - ID of the message to update.
+     * @param entity - new message content to update old one with .
+     * @return 404 if message doesn't exists or 200 OK if updated successfully.
+     */
     @PUT
     @Path("{id}")
     @Consumes({"application/xml", "application/json"})
-    public void update(@PathParam("id") Integer id, Message entity) {
+    public Response update(@PathParam("id") Integer id, Message entity) {
+        Object[] params = { id, entity }; 
+        LOG.log(Level.INFO, "ENTRY to update() action.  URL Path parameter: {0}. Reponding to PUT: {1}.", params);
+        
+        Message message = super.find(id);
+        if(message == null){
+            LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
+            return Response.status(404).build();
+        }
+        
+        /* Ensure the id is set on the entity so merge() will update it */
+        entity.setId(id);
         super.edit(entity);
+        LOG.info("Message successfully updated.");
+        
+        return Response.status(Status.OK).build();
     }
 
+    /**
+     * Delete a specific message.
+     * @param id - ID of the message to delete.
+     * @return 404 if message doesn't exist or 200 OK if message deleted successfully.
+     */
     @DELETE
     @Path("{id}")
     public Response delete(@PathParam("id") Integer id) {
-        Response response;
+        LOG.log(Level.INFO, "ENTRY to delete() action. URL Path Parameter: {0}. Reponding to DELETE.", id);
+        
         Message message = super.find(id);
-        
-        if(message != null){
-            super.remove(message);
-            response = Response
-            .status(Response.Status.OK)
-            .build();
-        }
-        else{
-            response = Response
-            .status(Response.Status.NOT_FOUND)
-            .build(); 
+        if(message == null){
+            LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
+            return Response.status(404).build();
         }
         
-        return response;
+        super.remove(message);
+        LOG.info("Message successfully deleted.");
+        
+        return Response.status(Status.OK).build();
     }
 
+    /**
+     * Get a message by ID.
+     * @param id - ID of the message to return.
+     * @return Response containing the message in JSON or XML format,
+     * or 404 if message doesn't exist.
+     */
     @GET
     @Path("{id}")
     @Produces({"application/xml", "application/json"})
-    public Response retrieve(@PathParam("id") Integer id) {
+    public Response retrieveById(@PathParam("id") Integer id) {
+        LOG.log(Level.INFO, "ENTRY to retrieveById() action. URL Path Parameter: {0}. Reponding to GET.", id);
         
-        Response response;
         Message message = super.find(id);
-        
-        if(message != null){
-            response = Response
-            .status(Response.Status.OK)
-            .entity(message)
-            .build();
-        }
-        else{
-            response = Response
-            .status(Response.Status.NOT_FOUND)
-            .build(); 
+        if(message == null){
+            LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
+            return Response.status(404).build();
         }
         
-        return response;
+        return Response.status(Status.OK).build();
     }
 
+    /**
+     * Get all messages.
+     * @return A list of all messages in XML or JSON format.
+     */
     @GET
     @Produces({"application/xml", "application/json"})
     public Response retrieveAll() {
+        LOG.log(Level.INFO, "ENTRY to retrieveAll() action. Reponding to GET.");
+        
         List<Message> messages = super.findAll();
         /* Need to wrap collection in GenericType to return it in Response*/
         GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
@@ -125,21 +162,35 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
             .entity(wrappedMessages)
             .build();
     }
-
-   // UNEEDED METHODS BELOW REMOVE ???
-//    @GET 
-//    @Path("{from}/{to}")
-//    @Produces({"application/xml", "application/json"})
-//    public List<Message> findRange(@PathParam("from") Integer from, @PathParam("to") Integer to) {
-//        return super.findRange(new int[]{from, to});
-//    }
-//
-//    @GET
-//    @Path("count")
-//    @Produces("text/plain")
-//    public String countREST() {
-//        return String.valueOf(super.count());
-//    }
+    
+    /**
+     * Gets a list of all messages from a specific group.
+     * @param groupId
+     * @return All messages belonging to a specified group (as JSON or XMl)
+     */
+    @GET
+    @Path("group/{group_id}")
+    @Produces({"application/xml", "application/json"})
+    public Response retreiveAllByGroup(@PathParam("group_id") Integer groupId) {
+        LOG.log(Level.INFO, "ENTRY to retreiveAllByGroup() action. URL Path Parameter: {0}. Reponding to GET.", groupId);
+        
+        List<Message> messages = super.findAll();
+        List<Message> messagesInGroup = new ArrayList<>();
+        
+        /* Filter list to match group id */
+        for(Message m : messages){
+            if(m.getGroupId()==groupId){
+                messagesInGroup.add(m);
+            }
+        }
+        
+        /* Need to wrap collection in GenericType to return it in Response */
+        GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messagesInGroup) {};
+        return Response
+            .status(Response.Status.OK)
+            .entity(wrappedMessages)
+            .build();
+    }
 
     @Override
     protected EntityManager getEntityManager() {

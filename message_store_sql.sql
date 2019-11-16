@@ -8,7 +8,7 @@ CREATE TABLE system_user (
 );
 
 CREATE TABLE message (
-   id INT PRIMARY KEY,
+   id SERIAL PRIMARY KEY,
    user_uid VARCHAR (7) REFERENCES system_user(uid),
    body VARCHAR (1500) NOT NULL,
    is_deleted BOOLEAN NOT NULL,

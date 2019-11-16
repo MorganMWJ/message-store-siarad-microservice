@@ -20,6 +20,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -48,7 +49,8 @@ public class Message implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy=GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="message_id_seq")
+    @SequenceGenerator(name="message_id_seq", sequenceName="message_id_seq", allocationSize=1)
     @Basic(optional = false)
     @NotNull
     @Column(name = "id")
@@ -86,7 +88,7 @@ public class Message implements Serializable {
     @ManyToOne
     private Message parentMessageId;
     @JoinColumn(name = "user_uid", referencedColumnName = "uid")
-    @ManyToOne
+    @ManyToOne(cascade=CascadeType.PERSIST)
     private SystemUser userUid;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "messageId")
     private Collection<MessageToUser> messageToUserCollection;
@@ -220,7 +222,7 @@ public class Message implements Serializable {
 
     @Override
     public String toString() {
-        return "entities.Message[ id=" + id + " ]";
+        return "entities.Message[ id=" + id + ", body=" + body + " ]";
     }
     
 }
