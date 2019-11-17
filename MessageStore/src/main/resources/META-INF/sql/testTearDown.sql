@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS test_message_to_user CASCADE;
+DROP TABLE IF EXISTS test_message CASCADE;
+DROP TABLE IF EXISTS test_system_user CASCADE;

@@ -6,10 +6,12 @@
 package service;
 
 import entities.Message;
+import entities.SystemUser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -49,6 +51,12 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
     UriInfo uriInfo;
     
     /**
+     * Access through facade to CRUD operations on User entity.
+     */
+    @EJB
+    private SystemUserFacade userFacade;
+    
+    /**
      * Logger.
      */
     private final static Logger LOG = Logger.getLogger(MessageFacadeREST.class.getName());
@@ -67,6 +75,16 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
     @Consumes({"application/xml", "application/json"})
     public Response createMessage(Message entity) {
         LOG.log(Level.INFO, "ENTRY to createMessage() action. Reponding to POST: {0}", entity);
+        
+        /* If owning user entity already exists then manually
+        ensure asscoaition becasue CascadeType.MEGRE is broken */
+        if(entity.getUserUid() != null){ //if user provided
+            SystemUser user = userFacade.find(entity.getUserUid().getUid());
+            if(user != null){ //if user already in database
+                //manually asscoiate new message to user
+                entity.setUserUid(user);
+            }
+        }
         
         super.create(entity);
         LOG.info("Message successfully created.");
@@ -92,6 +110,16 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
         if(message == null){
             LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
             return Response.status(404).build();
+        }
+        
+        /* If owning user entity already exists then manually
+        ensure asscoaition becasue CascadeType.MEGRE is broken */
+        if(entity.getUserUid() != null){ //if user provided
+            SystemUser user = userFacade.find(entity.getUserUid().getUid());
+            if(user != null){ //if user already in database
+                //manually asscoiate new message to user
+                entity.setUserUid(user);
+            }
         }
         
         /* Ensure the id is set on the entity so merge() will update it */

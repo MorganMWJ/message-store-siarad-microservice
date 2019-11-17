@@ -6,6 +6,7 @@ entities\MessageToUser.class
 service\ApplicationConfig.class
 entities\Message.class
 entities\SystemUser_.class
+service\SystemUserFacade.class
 entities\MessageToUser_.class
 service\MessageFacadeREST$1.class
 entities\SystemUser.class

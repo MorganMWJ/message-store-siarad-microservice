@@ -40,7 +40,7 @@ public class SystemUser implements Serializable {
     @Size(min = 1, max = 7)
     @Column(name = "uid")
     private String uid;
-    @OneToMany(mappedBy = "userUid")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userUid") //CascadeType.ALL ???
     private Collection<Message> messageCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "userUid")
     private Collection<MessageToUser> messageToUserCollection;

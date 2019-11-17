@@ -12,6 +12,7 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -88,7 +89,7 @@ public class Message implements Serializable {
     @ManyToOne
     private Message parentMessageId;
     @JoinColumn(name = "user_uid", referencedColumnName = "uid")
-    @ManyToOne(cascade=CascadeType.PERSIST)
+    @ManyToOne(cascade=CascadeType.PERSIST) //MERGE not working
     private SystemUser userUid;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "messageId")
     private Collection<MessageToUser> messageToUserCollection;
