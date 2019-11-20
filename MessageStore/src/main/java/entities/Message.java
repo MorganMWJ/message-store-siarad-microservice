@@ -88,10 +88,11 @@ public class Message implements Serializable {
     @JoinColumn(name = "parent_message_id", referencedColumnName = "id")
     @ManyToOne
     private Message parentMessageId;
-    @JoinColumn(name = "user_uid", referencedColumnName = "uid")
+    @JoinColumn(name = "user_uid", referencedColumnName = "uid") //user_uid
     @ManyToOne(cascade=CascadeType.PERSIST) //MERGE not working
     private SystemUser userUid;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "messageId")
+    @JoinColumn(name = "message_to_user_id")
+    @OneToMany(mappedBy = "messageId", cascade = CascadeType.ALL) //orpahnremoval??
     private Collection<MessageToUser> messageToUserCollection;
 
     public Message() {

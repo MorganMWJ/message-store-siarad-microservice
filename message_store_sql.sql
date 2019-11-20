@@ -23,7 +23,7 @@ CREATE TABLE message (
 );
 
 CREATE TABLE message_to_user (
-  message_to_user_id INT PRIMARY KEY,
+  id SERIAL PRIMARY KEY,
   message_id INT NOT NULL REFERENCES message(id),
   user_uid VARCHAR (7) NOT NULL REFERENCES system_user(uid),
   is_tagged BOOLEAN NOT NULL,

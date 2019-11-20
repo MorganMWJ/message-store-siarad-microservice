@@ -9,11 +9,15 @@ import java.io.Serializable;
 import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
+import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -27,7 +31,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlRootElement
 @NamedQueries({
     @NamedQuery(name = "MessageToUser.findAll", query = "SELECT m FROM MessageToUser m")
-    , @NamedQuery(name = "MessageToUser.findByMessageToUserId", query = "SELECT m FROM MessageToUser m WHERE m.messageToUserId = :messageToUserId")
+    , @NamedQuery(name = "MessageToUser.findById", query = "SELECT m FROM MessageToUser m WHERE m.id = :id")
     , @NamedQuery(name = "MessageToUser.findByIsTagged", query = "SELECT m FROM MessageToUser m WHERE m.isTagged = :isTagged")
     , @NamedQuery(name = "MessageToUser.findByHasSeen", query = "SELECT m FROM MessageToUser m WHERE m.hasSeen = :hasSeen")
     , @NamedQuery(name = "MessageToUser.findByHasBeenNotified", query = "SELECT m FROM MessageToUser m WHERE m.hasBeenNotified = :hasBeenNotified")})
@@ -35,10 +39,12 @@ public class MessageToUser implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="message_to_user_id_seq")
+    @SequenceGenerator(name="message_to_user_id_seq", sequenceName="message_to_user_id_seq", allocationSize=1)
     @Basic(optional = false)
     @NotNull
-    @Column(name = "message_to_user_id")
-    private Integer messageToUserId;
+    @Column(name = "id")
+    private Integer id;
     @Basic(optional = false)
     @NotNull
     @Column(name = "is_tagged")
@@ -51,7 +57,8 @@ public class MessageToUser implements Serializable {
     @NotNull
     @Column(name = "has_been_notified")
     private boolean hasBeenNotified;
-    @JoinColumn(name = "message_id", referencedColumnName = "id")
+    
+    //@JoinColumn(name = "message_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private Message messageId;
     @JoinColumn(name = "user_uid", referencedColumnName = "uid")
@@ -61,23 +68,23 @@ public class MessageToUser implements Serializable {
     public MessageToUser() {
     }
 
-    public MessageToUser(Integer messageToUserId) {
-        this.messageToUserId = messageToUserId;
+    public MessageToUser(Integer id) {
+        this.id = id;
     }
 
-    public MessageToUser(Integer messageToUserId, boolean isTagged, boolean hasSeen, boolean hasBeenNotified) {
-        this.messageToUserId = messageToUserId;
+    public MessageToUser(Integer id, boolean isTagged, boolean hasSeen, boolean hasBeenNotified) {
+        this.id = id;
         this.isTagged = isTagged;
         this.hasSeen = hasSeen;
         this.hasBeenNotified = hasBeenNotified;
     }
 
-    public Integer getMessageToUserId() {
-        return messageToUserId;
+    public Integer getId() {
+        return id;
     }
 
-    public void setMessageToUserId(Integer messageToUserId) {
-        this.messageToUserId = messageToUserId;
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public boolean getIsTagged() {
@@ -123,7 +130,7 @@ public class MessageToUser implements Serializable {
     @Override
     public int hashCode() {
         int hash = 0;
-        hash += (messageToUserId != null ? messageToUserId.hashCode() : 0);
+        hash += (id != null ? id.hashCode() : 0);
         return hash;
     }
 
@@ -134,7 +141,7 @@ public class MessageToUser implements Serializable {
             return false;
         }
         MessageToUser other = (MessageToUser) object;
-        if ((this.messageToUserId == null && other.messageToUserId != null) || (this.messageToUserId != null && !this.messageToUserId.equals(other.messageToUserId))) {
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
             return false;
         }
         return true;
@@ -142,7 +149,7 @@ public class MessageToUser implements Serializable {
 
     @Override
     public String toString() {
-        return "entities.MessageToUser[ messageToUserId=" + messageToUserId + " ]";
+        return "entities.MessageToUser[ messageToUserId=" + id + " ]";
     }
     
 }

@@ -1,5 +1,12 @@
+--empty user_to_message table
+DELETE FROM message_to_user;
+
 --empty message table
 DELETE FROM message;
+
+--empty user table
+DELETE FROM system_user;
+
 --restart auto id sequence upon redeployment
 ALTER SEQUENCE message_id_seq RESTART;
 
@@ -9,11 +16,17 @@ INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time
 INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('Third Message Of Christmas',1,false,false,'2019-11-15 21:31:44.490','2019-11-15 21:31:44.490');
 INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('Message in different group',2,false,false,'2019-11-15 21:31:44.490','2019-11-15 21:31:44.490');
 
---empty user table
-DELETE FROM system_user;
+
 --insert a new user
 INSERT INTO system_user (uid) VALUES ('mwj7');
 
 --insert some messages owned by that user
 INSERT INTO message (user_uid, body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('mwj7', 'mwj7 - first message',1,false,false,'2019-11-16 15:47:44.490','2019-11-16 16:47:44.490');
 INSERT INTO message (user_uid, body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('mwj7', 'mwj7 - second message',1,false,false,'2019-11-16 15:47:44.490','2019-11-16 16:47:44.490');
+
+
+--restart auto id sequence upon redeployment
+ALTER SEQUENCE message_to_user_id_seq RESTART; 
+
+--insert a new message_to_user
+INSERT INTO message_to_user (message_id, user_uid, is_tagged, has_seen, has_been_notified) VALUES (5, 'mwj7', false, true, false);

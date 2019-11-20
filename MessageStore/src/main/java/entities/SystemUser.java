@@ -40,8 +40,8 @@ public class SystemUser implements Serializable {
     @Size(min = 1, max = 7)
     @Column(name = "uid")
     private String uid;
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "userUid") //CascadeType.ALL ???
-    private Collection<Message> messageCollection;
+    //@OneToMany(cascade = CascadeType.ALL, mappedBy = "userUid") //CascadeType.ALL ???
+    //private Collection<Message> messageCollection;
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "userUid")
     private Collection<MessageToUser> messageToUserCollection;
 
@@ -60,14 +60,14 @@ public class SystemUser implements Serializable {
         this.uid = uid;
     }
 
-    @XmlTransient
-    public Collection<Message> getMessageCollection() {
-        return messageCollection;
-    }
-
-    public void setMessageCollection(Collection<Message> messageCollection) {
-        this.messageCollection = messageCollection;
-    }
+//    @XmlTransient
+//    public Collection<Message> getMessageCollection() {
+//        return messageCollection;
+//    }
+//
+//    public void setMessageCollection(Collection<Message> messageCollection) {
+//        this.messageCollection = messageCollection;
+//    }
 
     @XmlTransient
     public Collection<MessageToUser> getMessageToUserCollection() {
