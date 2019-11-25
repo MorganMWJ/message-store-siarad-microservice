@@ -5,10 +5,7 @@
  */
 package service;
 
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+
 import entities.Message;
 import entities.MessageToUser;
 import java.util.ArrayList;
@@ -86,7 +83,7 @@ public class MessageStoreREST {
      * @return 201 Created HTTP response upon successful creation.
      */
     @POST
-    @Consumes({"application/xml", "application/json"})
+    @Consumes("application/json")
     public Response createMessage(Message entity) {
         LOG.log(Level.INFO, "ENTRY to createMessage() action. Reponding to POST: {0}", entity);
         
@@ -105,7 +102,7 @@ public class MessageStoreREST {
      */
     @PUT
     @Path("{id}")
-    @Consumes({"application/xml", "application/json"})
+    @Consumes("application/json")
     public Response update(@PathParam("id") Integer id, Message entity) {
         Object[] params = { id, entity }; 
         LOG.log(Level.INFO, "ENTRY to update() action.  URL Path parameter: {0}. Reponding to PUT: {1}.", params);
@@ -154,7 +151,7 @@ public class MessageStoreREST {
      */
     @GET
     @Path("{id}")
-    @Produces({"application/xml", "application/json"})
+    @Produces("application/json")
     public Response retrieveById(@PathParam("id") Integer id) {
         LOG.log(Level.INFO, "ENTRY to retrieveById() action. URL Path Parameter: {0}. Reponding to GET.", id);
         
@@ -176,10 +173,10 @@ public class MessageStoreREST {
     @Produces("application/json")
     public Response retreiveAllByUser(@PathParam("uid") String uid){
         LOG.log(Level.INFO, "ENTRY to retreiveAllByUser() action. URL Path Parameter: {0}. Reponding to GET.", uid);       
-        List<MessageToUser> messages = messageToUserFacade.getAllUserMessages(uid);     
+        List<Message> messages = messageFacade.getMessagesById(uid);     
     
         /* Need to wrap collection in GenericType to return it in Response*/
-        GenericEntity<List<MessageToUser>> wrappedMessages = new GenericEntity<List<MessageToUser>>(messages) {};
+        GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
         return Response
             .status(Response.Status.OK)
             .entity(wrappedMessages)
@@ -188,14 +185,14 @@ public class MessageStoreREST {
     
     /**
      * Get all messages.
-     * @return A list of all messages in XML or JSON format.
+     * @return A list of all messages in JSON format.
      */
     @GET
-    @Produces("application/json")
+    @Produces("application/xml")
     public Response retrieveAll() {
         LOG.log(Level.INFO, "ENTRY to retrieveAll() action. Reponding to GET.");        
-        List<Message> messages = messageFacade.findAll();     
-    
+        List<Message> messages = messageFacade.findAll();    
+
         /* Need to wrap collection in GenericType to return it in Response*/
         GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
         return Response
@@ -240,7 +237,7 @@ public class MessageStoreREST {
      */
     @GET
     @Path("group/{group_id}")
-    @Produces({"application/xml", "application/json"})
+    @Produces("application/json")
     public Response retreiveAllByGroup(@PathParam("group_id") Integer groupId) {
         LOG.log(Level.INFO, "ENTRY to retreiveAllByGroup() action. URL Path Parameter: {0}. Reponding to GET.", groupId);
         

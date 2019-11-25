@@ -44,6 +44,7 @@ public class MessageToUserFacade extends AbstractFacade<MessageToUser> {
         return em;
     }
     
+    //REMOVE THIS its just an example of using Criteria Builder/Query
     public List<MessageToUser> getAllUserMessages(String uid){
         //"SELECT * FROM message INNER JOIN message_to_user ON message.id=message_to_user.id INNER JOIN system_user ON message_to_user.user_uid=system_user.uid;"
         

@@ -25,8 +25,12 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+import org.eclipse.persistence.oxm.annotations.XmlInverseReference;
 
 /**
  *
@@ -35,6 +39,7 @@ import javax.xml.bind.annotation.XmlTransient;
 @Entity
 @Table(name = "message")
 @XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 @NamedQueries({
     @NamedQuery(name = "Message.findAll", query = "SELECT m FROM Message m")
     , @NamedQuery(name = "Message.findById", query = "SELECT m FROM Message m WHERE m.id = :id")
@@ -57,6 +62,9 @@ public class Message implements Serializable {
     @Size(min = 1, max = 1500)
     @Column(name = "body")
     private String body;
+    @Size(max = 7)
+    @Column(name = "owner_uid")
+    private String ownerUid;
     @Basic(optional = false)
     @NotNull
     @Column(name = "is_deleted")
@@ -83,10 +91,8 @@ public class Message implements Serializable {
     private Collection<Message> messageCollection;
     @JoinColumn(name = "parent_message_id", referencedColumnName = "id")
     @ManyToOne
-    private Message parentMessageId;
-//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "messageId") REMOVE THIS IT WENT WELL
-//    private Collection<MessageToUser> messageToUserCollection;
-
+    @XmlInverseReference(mappedBy="messageCollection")
+    private Message parentMessageId; // turn this to a integer just to hold the reference key instead of the whole Message entiry??? but then we would have no asscoiation and be doing all our selves
     public Message() {
     }
 
@@ -94,9 +100,10 @@ public class Message implements Serializable {
         this.id = id;
     }
 
-    public Message(Integer id, String body, boolean isDeleted, boolean hasReplies, Date timeCreated, Date timeEdited, int groupId) {
+    public Message(Integer id, String body, String ownerUid, boolean isDeleted, boolean hasReplies, Date timeCreated, Date timeEdited, int groupId) {
         this.id = id;
         this.body = body;
+        this.ownerUid = ownerUid;
         this.isDeleted = isDeleted;
         this.hasReplies = hasReplies;
         this.timeCreated = timeCreated;
@@ -118,6 +125,14 @@ public class Message implements Serializable {
 
     public void setBody(String body) {
         this.body = body;
+    }
+    
+    public String getOwnerUid() {
+        return ownerUid;
+    }
+
+    public void setOwnerUid(String ownerUid) {
+        this.ownerUid = ownerUid;
     }
 
     public boolean getIsDeleted() {
@@ -169,22 +184,19 @@ public class Message implements Serializable {
         this.messageCollection = messageCollection;
     }
 
+    @XmlTransient
     public Message getParentMessageId() {
         return parentMessageId;
     }
+    
+//    @XmlElement(name="parent_id")
+//    public Integer setParentMessageId() {
+//        return parentMessageId.getId();
+//    }
 
     public void setParentMessageId(Message parentMessageId) {
         this.parentMessageId = parentMessageId;
     }
-
-//    @XmlTransient
-//    public Collection<MessageToUser> getMessageToUserCollection() {
-//        return messageToUserCollection;
-//    }
-//
-//    public void setMessageToUserCollection(Collection<MessageToUser> messageToUserCollection) {
-//        this.messageToUserCollection = messageToUserCollection;
-//    }
 
     @Override
     public int hashCode() {
