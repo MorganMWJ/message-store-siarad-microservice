@@ -1,0 +1,11 @@
+service\MessageToUserFacade.class
+service\MessageFacade.class
+service\MessageStoreREST$3.class
+service\MessageStoreREST.class
+service\MessageStoreREST$2.class
+service\AbstractFacade.class
+entities\MessageToUser.class
+service\ApplicationConfig.class
+service\MessageStoreREST$1.class
+entities\Message.class
+service\MessageStoreREST$4.class

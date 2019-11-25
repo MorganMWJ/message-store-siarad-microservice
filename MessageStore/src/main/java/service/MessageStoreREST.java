@@ -5,16 +5,23 @@
  */
 package service;
 
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import entities.Message;
-import entities.SystemUser;
+import entities.MessageToUser;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
+import javax.inject.Inject;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.persistence.Tuple;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -36,7 +43,7 @@ import javax.ws.rs.core.UriInfo;
  */
 @Stateless
 @Path("messages")
-public class MessageFacadeREST extends AbstractFacade<Message> {
+public class MessageStoreREST {
     
     /**
      * Entity Manager to interact with persistence context (PostgreSQL Database).
@@ -51,18 +58,25 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
     UriInfo uriInfo;
     
     /**
-     * Access through facade to CRUD operations on User entity.
+     * Access through facade to CRUD operations on MessageToUser entity.
      */
     @EJB
-    private SystemUserFacade userFacade;
+    private MessageToUserFacade messageToUserFacade;
+    
+    /**
+     * Access through facade to CRUD operations on MessageToUser entity.
+     */
+    @EJB
+    private MessageFacade messageFacade;
+    
+//    private Gson gson;
     
     /**
      * Logger.
      */
-    private final static Logger LOG = Logger.getLogger(MessageFacadeREST.class.getName());
+    private final static Logger LOG = Logger.getLogger(MessageStoreREST.class.getName());
 
-    public MessageFacadeREST() {
-        super(Message.class);
+    public MessageStoreREST() {
         LOG.setLevel(Level.ALL);
     }
 
@@ -76,17 +90,7 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
     public Response createMessage(Message entity) {
         LOG.log(Level.INFO, "ENTRY to createMessage() action. Reponding to POST: {0}", entity);
         
-        /* If owning user entity already exists then manually
-        ensure asscoaition becasue CascadeType.MEGRE is broken */
-        if(entity.getUserUid() != null){ //if user provided
-            SystemUser user = userFacade.find(entity.getUserUid().getUid());
-            if(user != null){ //if user already in database
-                //manually asscoiate new message to user
-                entity.setUserUid(user);
-            }
-        }
-        
-        super.create(entity);
+        messageFacade.create(entity);
         LOG.info("Message successfully created.");
         
         Link lnk = Link.fromUri(uriInfo.getPath() + "/" + entity.getId()).rel("self").build();
@@ -106,25 +110,15 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
         Object[] params = { id, entity }; 
         LOG.log(Level.INFO, "ENTRY to update() action.  URL Path parameter: {0}. Reponding to PUT: {1}.", params);
         
-        Message message = super.find(id);
+        Message message = messageFacade.find(id);
         if(message == null){
             LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
             return Response.status(404).build();
         }
         
-        /* If owning user entity already exists then manually
-        ensure asscoaition becasue CascadeType.MEGRE is broken */
-        if(entity.getUserUid() != null){ //if user provided
-            SystemUser user = userFacade.find(entity.getUserUid().getUid());
-            if(user != null){ //if user already in database
-                //manually asscoiate new message to user
-                entity.setUserUid(user);
-            }
-        }
-        
         /* Ensure the id is set on the entity so merge() will update it */
         entity.setId(id);
-        super.edit(entity);
+        messageFacade.edit(entity);
         LOG.info("Message successfully updated.");
         
         return Response.status(Status.OK).build();
@@ -140,13 +134,13 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
     public Response delete(@PathParam("id") Integer id) {
         LOG.log(Level.INFO, "ENTRY to delete() action. URL Path Parameter: {0}. Reponding to DELETE.", id);
         
-        Message message = super.find(id);
+        Message message = messageFacade.find(id);
         if(message == null){
             LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
             return Response.status(404).build();
         }
         
-        super.remove(message);
+        messageFacade.remove(message);
         LOG.info("Message successfully deleted.");
         
         return Response.status(Status.OK).build();
@@ -164,31 +158,79 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
     public Response retrieveById(@PathParam("id") Integer id) {
         LOG.log(Level.INFO, "ENTRY to retrieveById() action. URL Path Parameter: {0}. Reponding to GET.", id);
         
-        Message message = super.find(id);
+        Message message = messageFacade.find(id);
         if(message == null){
             LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
             return Response.status(404).build();
         }
         
-        return Response.status(Status.OK).build();
+        return Response.status(Status.OK).entity(message).build();
     }
-
+    
+    /**
+     * Get all a user's messages.
+     * @return Response containing the messages
+     */
+    @GET
+    @Path("user/{uid}")
+    @Produces("application/json")
+    public Response retreiveAllByUser(@PathParam("uid") String uid){
+        LOG.log(Level.INFO, "ENTRY to retreiveAllByUser() action. URL Path Parameter: {0}. Reponding to GET.", uid);       
+        List<MessageToUser> messages = messageToUserFacade.getAllUserMessages(uid);     
+    
+        /* Need to wrap collection in GenericType to return it in Response*/
+        GenericEntity<List<MessageToUser>> wrappedMessages = new GenericEntity<List<MessageToUser>>(messages) {};
+        return Response
+            .status(Response.Status.OK)
+            .entity(wrappedMessages)
+            .build();
+    }
+    
     /**
      * Get all messages.
      * @return A list of all messages in XML or JSON format.
      */
     @GET
-    @Produces({"application/xml", "application/json"})
+    @Produces("application/json")
     public Response retrieveAll() {
-        LOG.log(Level.INFO, "ENTRY to retrieveAll() action. Reponding to GET.");
-        
-        List<Message> messages = super.findAll();
+        LOG.log(Level.INFO, "ENTRY to retrieveAll() action. Reponding to GET.");        
+        List<Message> messages = messageFacade.findAll();     
+    
         /* Need to wrap collection in GenericType to return it in Response*/
         GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
         return Response
             .status(Response.Status.OK)
             .entity(wrappedMessages)
             .build();
+    }
+    
+    @GET
+    @Path("replies/{uid}")
+    @Produces("application/json")
+    public Response getReplySummary(@PathParam("uid") String uid){        
+        List<Message> messages = messageToUserFacade.getMessagesForReplyEmail(uid);     
+        
+        /* Need to wrap collection in GenericType to return it in Response*/
+        GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
+        
+        return Response
+            .status(Response.Status.OK)
+            .entity(wrappedMessages)
+            .build();
+    }
+    
+    @GET
+    @Path("mentions/{uid}")
+    @Produces("application/json")
+    public Response getMentionSummary(@PathParam("uid") String uid){        
+        return null;
+    }
+    
+    @GET
+    @Path("daily/{uid}")
+    @Produces("application/json")
+    public Response getDailySummary(@PathParam("uid") String uid){        
+        return null;
     }
     
     /**
@@ -202,7 +244,7 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
     public Response retreiveAllByGroup(@PathParam("group_id") Integer groupId) {
         LOG.log(Level.INFO, "ENTRY to retreiveAllByGroup() action. URL Path Parameter: {0}. Reponding to GET.", groupId);
         
-        List<Message> messages = super.findAll();
+        List<Message> messages = messageFacade.findAll();
         List<Message> messagesInGroup = new ArrayList<>();
         
         /* Filter list to match group id */
@@ -219,10 +261,4 @@ public class MessageFacadeREST extends AbstractFacade<Message> {
             .entity(wrappedMessages)
             .build();
     }
-
-    @Override
-    protected EntityManager getEntityManager() {
-        return em;
-    }
-    
 }

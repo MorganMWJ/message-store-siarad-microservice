@@ -12,7 +12,6 @@ import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -21,7 +20,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -50,10 +48,8 @@ public class Message implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="message_id_seq")
-    @SequenceGenerator(name="message_id_seq", sequenceName="message_id_seq", allocationSize=1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id")
     private Integer id;
     @Basic(optional = false)
@@ -88,12 +84,8 @@ public class Message implements Serializable {
     @JoinColumn(name = "parent_message_id", referencedColumnName = "id")
     @ManyToOne
     private Message parentMessageId;
-    @JoinColumn(name = "user_uid", referencedColumnName = "uid") //user_uid
-    @ManyToOne(cascade=CascadeType.PERSIST) //MERGE not working
-    private SystemUser userUid;
-    @JoinColumn(name = "message_to_user_id")
-    @OneToMany(mappedBy = "messageId", cascade = CascadeType.ALL) //orpahnremoval??
-    private Collection<MessageToUser> messageToUserCollection;
+//    @OneToMany(cascade = CascadeType.ALL, mappedBy = "messageId") REMOVE THIS IT WENT WELL
+//    private Collection<MessageToUser> messageToUserCollection;
 
     public Message() {
     }
@@ -185,22 +177,14 @@ public class Message implements Serializable {
         this.parentMessageId = parentMessageId;
     }
 
-    public SystemUser getUserUid() {
-        return userUid;
-    }
-
-    public void setUserUid(SystemUser userUid) {
-        this.userUid = userUid;
-    }
-
-    @XmlTransient
-    public Collection<MessageToUser> getMessageToUserCollection() {
-        return messageToUserCollection;
-    }
-
-    public void setMessageToUserCollection(Collection<MessageToUser> messageToUserCollection) {
-        this.messageToUserCollection = messageToUserCollection;
-    }
+//    @XmlTransient
+//    public Collection<MessageToUser> getMessageToUserCollection() {
+//        return messageToUserCollection;
+//    }
+//
+//    public void setMessageToUserCollection(Collection<MessageToUser> messageToUserCollection) {
+//        this.messageToUserCollection = messageToUserCollection;
+//    }
 
     @Override
     public int hashCode() {
@@ -224,7 +208,7 @@ public class Message implements Serializable {
 
     @Override
     public String toString() {
-        return "entities.Message[ id=" + id + ", body=" + body + " ]";
+        return "entity.Message[ id=" + id + " ]";
     }
     
 }

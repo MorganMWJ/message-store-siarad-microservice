@@ -5,7 +5,8 @@
  */
 package service;
 
-import entities.SystemUser;
+import entities.Message;
+import entities.MessageToUser;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -15,7 +16,7 @@ import javax.persistence.PersistenceContext;
  * @author Morgan
  */
 @Stateless
-public class SystemUserFacade extends AbstractFacade<SystemUser> {
+public class MessageFacade extends AbstractFacade<Message>{
     
     /**
      * Entity Manager to interact with persistence context (PostgreSQL Database).
@@ -23,13 +24,12 @@ public class SystemUserFacade extends AbstractFacade<SystemUser> {
     @PersistenceContext(unitName = "com.mycompany_RestJpa_war_1.0-SNAPSHOTPU")
     private EntityManager em;
 
-    public SystemUserFacade() {
-        super(SystemUser.class);
+    public MessageFacade() {
+        super(Message.class);
     }
 
     @Override
     protected EntityManager getEntityManager() {
         return em;
     }
-    
 }

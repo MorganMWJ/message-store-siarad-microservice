@@ -14,13 +14,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.MapsId;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
-import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlRootElement;
+import org.eclipse.persistence.oxm.annotations.XmlInverseReference;
 
 /**
  *
@@ -39,12 +39,17 @@ public class MessageToUser implements Serializable {
 
     private static final long serialVersionUID = 1L;
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator="message_to_user_id_seq")
-    @SequenceGenerator(name="message_to_user_id_seq", sequenceName="message_to_user_id_seq", allocationSize=1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Basic(optional = false)
-    @NotNull
     @Column(name = "id")
     private Integer id;
+    @Size(max = 7)
+    @Column(name = "user_uid")
+    private String userUid;
+    @Basic(optional = false)
+    @NotNull
+    @Column(name = "is_owner")
+    private boolean isOwner;
     @Basic(optional = false)
     @NotNull
     @Column(name = "is_tagged")
@@ -57,13 +62,9 @@ public class MessageToUser implements Serializable {
     @NotNull
     @Column(name = "has_been_notified")
     private boolean hasBeenNotified;
-    
-    //@JoinColumn(name = "message_id", referencedColumnName = "id")
+    @JoinColumn(name = "message_id", referencedColumnName = "id")
     @ManyToOne(optional = false)
     private Message messageId;
-    @JoinColumn(name = "user_uid", referencedColumnName = "uid")
-    @ManyToOne(optional = false)
-    private SystemUser userUid;
 
     public MessageToUser() {
     }
@@ -85,6 +86,22 @@ public class MessageToUser implements Serializable {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+    
+    public String getUserUid() {
+        return userUid;
+    }
+
+    public void setUserUid(String userUid) {
+        this.userUid = userUid;
+    }
+        
+    public boolean getIsOwner() {
+        return isOwner;
+    }
+
+    public void setIsOwner(boolean isOwner) {
+        this.isOwner = isOwner;
     }
 
     public boolean getIsTagged() {
@@ -119,14 +136,6 @@ public class MessageToUser implements Serializable {
         this.messageId = messageId;
     }
 
-    public SystemUser getUserUid() {
-        return userUid;
-    }
-
-    public void setUserUid(SystemUser userUid) {
-        this.userUid = userUid;
-    }
-
     @Override
     public int hashCode() {
         int hash = 0;
@@ -149,7 +158,7 @@ public class MessageToUser implements Serializable {
 
     @Override
     public String toString() {
-        return "entities.MessageToUser[ messageToUserId=" + id + " ]";
+        return "entity.MessageToUser[ id=" + id + " ]";
     }
     
 }
