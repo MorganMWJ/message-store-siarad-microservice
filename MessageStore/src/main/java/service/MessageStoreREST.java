@@ -8,6 +8,7 @@ package service;
 
 import entities.Message;
 import entities.MessageToUser;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -33,6 +34,10 @@ import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import org.eclipse.persistence.jaxb.MarshallerProperties;
 
 /**
  * REST service/API provided for Message Store Resource.
@@ -188,17 +193,34 @@ public class MessageStoreREST {
      * @return A list of all messages in JSON format.
      */
     @GET
-    @Produces("application/xml")
-    public Response retrieveAll() {
+    @Produces("application/json")
+    public List<Message> retrieveAll() {
         LOG.log(Level.INFO, "ENTRY to retrieveAll() action. Reponding to GET.");        
-        List<Message> messages = messageFacade.findAll();    
+        List<Message> messages = messageFacade.findAll();   
+        
+        JAXBContext jaxbContext;
+        try {
+            jaxbContext = JAXBContext.newInstance(Message.class);
+            Marshaller jaxbMarshaller   = jaxbContext.createMarshaller();
+            // To format JSON
+            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);              
+            //Set JSON type
+            jaxbMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json");
+            jaxbMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, true);
+            //Overloaded methods to marshal to different outputs            
+            jaxbMarshaller.marshal( messages.get(0), new PrintWriter( System.out ) );
+        } catch (JAXBException ex) {
+            Logger.getLogger(MessageStoreREST.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
-        /* Need to wrap collection in GenericType to return it in Response*/
-        GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
-        return Response
-            .status(Response.Status.OK)
-            .entity(wrappedMessages)
-            .build();
+
+//        /* Need to wrap collection in GenericType to return it in Response*/
+//        GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
+//        return Response
+//            .status(Response.Status.OK)
+//            .entity(wrappedMessages)
+//            .build();
+        return messages;
     }
     
     @GET

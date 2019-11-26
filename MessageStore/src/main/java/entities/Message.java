@@ -72,6 +72,7 @@ public class Message implements Serializable {
     @Basic(optional = false)
     @NotNull
     @Column(name = "has_replies")
+    @XmlTransient
     private boolean hasReplies;
     @Basic(optional = false)
     @NotNull
@@ -143,6 +144,7 @@ public class Message implements Serializable {
         this.isDeleted = isDeleted;
     }
 
+    @XmlTransient
     public boolean getHasReplies() {
         return hasReplies;
     }

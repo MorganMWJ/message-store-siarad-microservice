@@ -13,7 +13,7 @@ INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time
 INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('Third Message - Parent Message',1,true,false,'2019-11-15 21:31:44.490','2019-11-15 21:31:44.490');
 INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('Message in different group',2,false,false,'2019-11-15 21:31:44.490','2019-11-15 21:31:44.490');
 
---insert child message NEED TO FIX SELF-REFERNTIAL STACK OVERFLOW FIRST
+--insert child message
 INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited, parent_message_id) VALUES ('Child Message Body',1,false,false,'2019-11-15 21:31:44.490','2019-11-15 21:31:44.490',3);
 
 --insert some messages owned by a user
