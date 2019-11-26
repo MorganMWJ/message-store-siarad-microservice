@@ -9,6 +9,8 @@ import entities.Message;
 import entities.MessageToUser;
 import java.util.Collection;
 import java.util.List;
+import java.util.Vector;
+import javax.ejb.EJB;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -34,6 +36,9 @@ public class MessageToUserFacade extends AbstractFacade<MessageToUser> {
      */
     @PersistenceContext(unitName = "com.mycompany_RestJpa_war_1.0-SNAPSHOTPU")
     private EntityManager em;
+    
+    @EJB
+    private MessageFacade messageFacade;
 
     public MessageToUserFacade() {
         super(MessageToUser.class);
@@ -43,47 +48,24 @@ public class MessageToUserFacade extends AbstractFacade<MessageToUser> {
     protected EntityManager getEntityManager() {
         return em;
     }
-    
-    //REMOVE THIS its just an example of using Criteria Builder/Query
-    public List<MessageToUser> getAllUserMessages(String uid){
-        //"SELECT * FROM message INNER JOIN message_to_user ON message.id=message_to_user.id INNER JOIN system_user ON message_to_user.user_uid=system_user.uid;"
-        
-        CriteriaBuilder cb = em.getCriteriaBuilder();
-        
-        CriteriaQuery<MessageToUser> cq = cb.createQuery(MessageToUser.class);
 
-        Root<MessageToUser> root = cq.from(MessageToUser.class); //reverse this so root message?
-        //Root<Message> root2 = cq.from(Message.class)
-        Join<MessageToUser, Message> join = root.join("messageId");
-        
-        cq.select(root);
-        cq.where(
-            cb.equal(root.get("userUid"), uid),
-            cb.equal(root.get("isOwner"), true)
-        );
-        
-        TypedQuery<MessageToUser> q = em.createQuery(cq);
-        List<MessageToUser> allMessages = q.getResultList();
-        
-        return allMessages;
-    }
+   
     
-        /**
-     * TODO
+    /**
+     * If a user has been previously notified about a given by email ?REVISE THIS?
+     * @param uid
+     * @param message
      * @return 
      */
-//    public List<Message> getAllMessages(){
-//        CriteriaBuilder cb = em.getCriteriaBuilder();        
-//        CriteriaQuery<Message> cq = cb.createQuery(Message.class);
-//        Root<Message> root = cq.from(Message.class); 
-//        Join<Message, MessageToUser> join = root.join("messageToUserCollection");
-//        
-//        cq.select(cb.array(root.get("name"), root.get("userUid")));
-//        
-//        TypedQuery<Message> q = em.createQuery(cq);
-//        List<Message> allMessages = q.getResultList();        
-//        return allMessages;
-//    } 
+    private boolean hasBeenNotified(String uid, Message message){
+        List<MessageToUser> messageToUsers = super.findAll();
+        for(MessageToUser tuple : messageToUsers){
+            if(tuple.getUserUid().equals(uid) && tuple.getMessageId().equals(message) && !tuple.getHasBeenNotified()){
+                return true;
+            }
+        }
+        return false;
+    }
     
     /**
      * TODO
@@ -98,7 +80,18 @@ public class MessageToUserFacade extends AbstractFacade<MessageToUser> {
      * @return 
      */
     public List<Message> getMessagesForReplyEmail(String uid){
-        return null; //TODO
+        List<Message> result = new Vector<Message>();
+        List<Message> ownedMessages = messageFacade.getOwnedMessages(uid);
+        for(Message m : ownedMessages){
+            Collection<Message> replies = m.getMessageCollection();
+            for(Message reply : replies){
+                if(hasBeenNotified(uid,reply)==false){
+                    result.add(reply);
+                    //TODO set has been notified to true
+                }
+            }
+        }
+        return result;
     }
     
     /**

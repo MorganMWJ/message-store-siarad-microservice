@@ -72,7 +72,6 @@ public class Message implements Serializable {
     @Basic(optional = false)
     @NotNull
     @Column(name = "has_replies")
-    @XmlTransient
     private boolean hasReplies;
     @Basic(optional = false)
     @NotNull
@@ -93,7 +92,7 @@ public class Message implements Serializable {
     @JoinColumn(name = "parent_message_id", referencedColumnName = "id")
     @ManyToOne
     @XmlInverseReference(mappedBy="messageCollection")
-    private Message parentMessageId; // turn this to a integer just to hold the reference key instead of the whole Message entiry??? but then we would have no asscoiation and be doing all our selves
+    private Message parentMessageId;
     public Message() {
     }
 
@@ -135,7 +134,7 @@ public class Message implements Serializable {
     public void setOwnerUid(String ownerUid) {
         this.ownerUid = ownerUid;
     }
-
+    
     public boolean getIsDeleted() {
         return isDeleted;
     }
@@ -144,7 +143,6 @@ public class Message implements Serializable {
         this.isDeleted = isDeleted;
     }
 
-    @XmlTransient
     public boolean getHasReplies() {
         return hasReplies;
     }

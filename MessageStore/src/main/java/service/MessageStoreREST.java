@@ -7,19 +7,13 @@ package service;
 
 
 import entities.Message;
-import entities.MessageToUser;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ejb.EJB;
 import javax.ejb.Stateless;
-import javax.inject.Inject;
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
-import javax.persistence.Tuple;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -29,15 +23,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
-import javax.ws.rs.core.GenericEntity;
 import javax.ws.rs.core.Link;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.UriInfo;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import org.eclipse.persistence.jaxb.MarshallerProperties;
 
 /**
  * REST service/API provided for Message Store Resource.
@@ -46,13 +35,7 @@ import org.eclipse.persistence.jaxb.MarshallerProperties;
 @Stateless
 @Path("messages")
 public class MessageStoreREST {
-    
-    /**
-     * Entity Manager to interact with persistence context (PostgreSQL Database).
-     */
-    @PersistenceContext(unitName = "com.mycompany_RestJpa_war_1.0-SNAPSHOTPU")
-    private EntityManager em;
-    
+        
     /**
      * Use uriInfo to get current context path and to build HATEOAS links.
     * */
@@ -70,8 +53,6 @@ public class MessageStoreREST {
      */
     @EJB
     private MessageFacade messageFacade;
-    
-//    private Gson gson;
     
     /**
      * Logger.
@@ -171,6 +152,7 @@ public class MessageStoreREST {
     
     /**
      * Get all a user's messages.
+     * @param uid
      * @return Response containing the messages
      */
     @GET
@@ -178,13 +160,11 @@ public class MessageStoreREST {
     @Produces("application/json")
     public Response retreiveAllByUser(@PathParam("uid") String uid){
         LOG.log(Level.INFO, "ENTRY to retreiveAllByUser() action. URL Path Parameter: {0}. Reponding to GET.", uid);       
-        List<Message> messages = messageFacade.getMessagesById(uid);     
+        List<Message> messages = messageFacade.getOwnedMessages(uid);     
     
-        /* Need to wrap collection in GenericType to return it in Response*/
-        GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
         return Response
             .status(Response.Status.OK)
-            .entity(wrappedMessages)
+            .entity(messages)
             .build();
     }
     
@@ -194,50 +174,38 @@ public class MessageStoreREST {
      */
     @GET
     @Produces("application/json")
-    public List<Message> retrieveAll() {
+    public Response retrieveAll() {
         LOG.log(Level.INFO, "ENTRY to retrieveAll() action. Reponding to GET.");        
-        List<Message> messages = messageFacade.findAll();   
+        List<Message> messages = messageFacade.findAll();
         
-        JAXBContext jaxbContext;
-        try {
-            jaxbContext = JAXBContext.newInstance(Message.class);
-            Marshaller jaxbMarshaller   = jaxbContext.createMarshaller();
-            // To format JSON
-            jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);              
-            //Set JSON type
-            jaxbMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json");
-            jaxbMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, true);
-            //Overloaded methods to marshal to different outputs            
-            jaxbMarshaller.marshal( messages.get(0), new PrintWriter( System.out ) );
-        } catch (JAXBException ex) {
-            Logger.getLogger(MessageStoreREST.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-
-//        /* Need to wrap collection in GenericType to return it in Response*/
-//        GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
-//        return Response
-//            .status(Response.Status.OK)
-//            .entity(wrappedMessages)
-//            .build();
-        return messages;
+        return Response
+            .status(Response.Status.OK)
+            .entity(messages)
+            .build();
     }
     
+    /**
+     * Get the messages required for a given user's reply summary.
+     * @param uid
+     * @return
+     */
     @GET
     @Path("replies/{uid}")
     @Produces("application/json")
     public Response getReplySummary(@PathParam("uid") String uid){        
         List<Message> messages = messageToUserFacade.getMessagesForReplyEmail(uid);     
-        
-        /* Need to wrap collection in GenericType to return it in Response*/
-        GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messages) {};
-        
+                
         return Response
             .status(Response.Status.OK)
-            .entity(wrappedMessages)
+            .entity(messages)
             .build();
     }
     
+    /**
+     * Get the messages required for a given user's mentions summary.
+     * @param uid
+     * @return
+     */
     @GET
     @Path("mentions/{uid}")
     @Produces("application/json")
@@ -245,6 +213,11 @@ public class MessageStoreREST {
         return null;
     }
     
+    /**
+     * Get the messages required for a given user's daily summary.
+     * @param uid
+     * @return
+     */
     @GET
     @Path("daily/{uid}")
     @Produces("application/json")
@@ -264,7 +237,7 @@ public class MessageStoreREST {
         LOG.log(Level.INFO, "ENTRY to retreiveAllByGroup() action. URL Path Parameter: {0}. Reponding to GET.", groupId);
         
         List<Message> messages = messageFacade.findAll();
-        List<Message> messagesInGroup = new ArrayList<>();
+        List<Message> messagesInGroup = new Vector<>();
         
         /* Filter list to match group id */
         for(Message m : messages){
@@ -273,11 +246,9 @@ public class MessageStoreREST {
             }
         }
         
-        /* Need to wrap collection in GenericType to return it in Response */
-        GenericEntity<List<Message>> wrappedMessages = new GenericEntity<List<Message>>(messagesInGroup) {};
         return Response
             .status(Response.Status.OK)
-            .entity(wrappedMessages)
+            .entity(messagesInGroup)
             .build();
     }
 }

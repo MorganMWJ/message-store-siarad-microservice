@@ -8,6 +8,7 @@ package service;
 import entities.Message;
 import entities.MessageToUser;
 import java.util.List;
+import java.util.Vector;
 import javax.ejb.Stateless;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -38,17 +39,22 @@ public class MessageFacade extends AbstractFacade<Message>{
         return em;
     }
     
-    public List<Message> getMessagesById(String uid){
-        CriteriaBuilder cb = em.getCriteriaBuilder();        
-        CriteriaQuery<Message> cq = cb.createQuery(Message.class);
-        Root<Message> root = cq.from(Message.class);
-        
-        cq.select(root);
-        cq.where(cb.equal(root.get("ownerUid"), uid));
-        
-        TypedQuery<Message> q = em.createQuery(cq);
-        List<Message> result = q.getResultList();
-        
+    /**
+     * 
+     * @param uid
+     * @return 
+     */
+    public List<Message> getOwnedMessages(String uid){
+        List<Message> result = new Vector<>();
+        List<Message> messages = super.findAll();
+        for(Message m : messages){
+            try{
+                if(m.getOwnerUid().equals(uid)){
+                    result.add(m);
+                }
+            } catch(NullPointerException e){
+            }
+        }
         return result;
     }
 }
