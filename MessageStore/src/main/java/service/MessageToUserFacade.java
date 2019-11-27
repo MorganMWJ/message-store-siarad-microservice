@@ -7,6 +7,7 @@ package service;
 
 import entities.Message;
 import entities.MessageToUser;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Vector;
@@ -116,6 +117,7 @@ public class MessageToUserFacade extends AbstractFacade<MessageToUser> {
     
     /**
      * Gets an specific MessageToUser entity given a user id and message.
+     * Null if no association exists.
      * @param uid
      * @param message
      * @return 
@@ -130,5 +132,45 @@ public class MessageToUserFacade extends AbstractFacade<MessageToUser> {
             }
         }
         return null;
+    }
+    
+    /**
+     * Extract the user IDs of the tagged individuals in a message.
+     * @param message
+     * @return List of User ids
+     */
+    public ArrayList<String> parseMessageTags(Message message){
+        ArrayList<String> tags = new ArrayList<String>();
+        String body = message.getBody();
+        
+        String[] words = body.split(" ");
+        for ( String word : words) {
+            if(word.charAt(0)=='@'){
+                String uid = word.substring(1);
+                tags.add(uid);
+            }
+        }
+        
+        return tags;
+    }
+    
+    /**
+     * Create an association for each provided user to the provided message setting isTagged to true.
+     * If the user is already associated with the message then update entity instead of create.
+     * @param uids 
+     * @param message
+     */
+    public void createAssociationsForTaggedUsers(ArrayList<String> uids, Message message){
+        for(String uid : uids){
+            MessageToUser association = getMessageAssociation(uid, message);
+            if(association == null){
+                MessageToUser newAssociation = new MessageToUser(null, uid, false, true, false, false, message);
+                super.create(newAssociation);
+            }
+            else{
+                association.setIsTagged(true);
+                super.edit(association);
+            }
+        }
     }
 }

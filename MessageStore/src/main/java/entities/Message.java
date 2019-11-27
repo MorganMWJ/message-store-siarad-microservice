@@ -146,9 +146,9 @@ public class Message implements Serializable {
         this.isDeleted = isDeleted;
     }
 
-    public boolean getHasReplies() {
-        return hasReplies;
-    }
+//    public boolean getHasReplies() {
+//        return hasReplies;
+//    }
 
     public void setHasReplies(boolean hasReplies) {
         this.hasReplies = hasReplies;

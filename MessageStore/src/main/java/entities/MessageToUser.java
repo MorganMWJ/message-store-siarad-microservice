@@ -73,13 +73,14 @@ public class MessageToUser implements Serializable {
         this.id = id;
     }
 
-    public MessageToUser(Integer id, String userUid, boolean isOwner, boolean isTagged, boolean hasSeen, boolean hasBeenNotified) {
+    public MessageToUser(Integer id, String userUid, boolean isOwner, boolean isTagged, boolean hasSeen, boolean hasBeenNotified, Message messageId) {
         this.id = id;
         this.userUid = userUid;
         this.isOwner = isOwner;
         this.isTagged = isTagged;
         this.hasSeen = hasSeen;
         this.hasBeenNotified = hasBeenNotified;
+        this.messageId = messageId;
     }
 
     public Integer getId() {

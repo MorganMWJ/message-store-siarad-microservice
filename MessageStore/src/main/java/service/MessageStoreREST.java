@@ -7,6 +7,7 @@ package service;
 
 
 import entities.Message;
+import entities.MessageToUser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -76,6 +77,16 @@ public class MessageStoreREST {
         messageFacade.create(entity);
         LOG.info("Message successfully created.");
         
+        if(entity.getOwnerUid()!=null){
+            /* Need to now create a default association for the owning user of that message */
+            MessageToUser association = new MessageToUser(null, entity.getOwnerUid(), true, false, true, false, entity);
+            messageToUserFacade.create(association);
+        }
+        
+        /* Create associations for those users tagged in the new message */
+        ArrayList<String> tags = messageToUserFacade.parseMessageTags(entity);
+        messageToUserFacade.createAssociationsForTaggedUsers(tags, entity);
+        
         Link lnk = Link.fromUri(uriInfo.getPath() + "/" + entity.getId()).rel("self").build();
         return Response.status(Response.Status.CREATED).location(lnk.getUri()).build();
     }
@@ -99,10 +110,23 @@ public class MessageStoreREST {
             return Response.status(404).build();
         }
         
-        /* Ensure the id is set on the entity so merge() will update it */
+        /* Not allowed to update parent message ID */
+        if(entity.getParentMessageId() != message.getParentMessageId()){
+            LOG.log(Level.SEVERE, "Not allowed to update parent message ID.");
+        }
+        
+        /* In case id=null ensure the id is set on the entity so merge() will update it */
         entity.setId(id);
-        messageFacade.edit(entity);
+        
+        /* Keep the messages replies so an update will not remove them all as children */
+        entity.setMessageCollection(message.getMessageCollection());
+        
+        messageFacade.edit(entity);        
         LOG.info("Message successfully updated.");
+        
+        /* Create associations for those users tagged in the new message */
+        ArrayList<String> tags = messageToUserFacade.parseMessageTags(entity);
+        messageToUserFacade.createAssociationsForTaggedUsers(tags, entity);
         
         return Response.status(Status.OK).build();
     }

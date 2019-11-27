@@ -36,3 +36,8 @@ INSERT INTO message_to_user (message_id, user_uid, is_owner, is_tagged, has_seen
 INSERT INTO message_to_user (message_id, user_uid, is_owner, is_tagged, has_seen, has_been_notified) VALUES (2, 'mwj7', false, true, false, false)
 -- mwj7 has been mentioned in the 4th message but has already been notified
 INSERT INTO message_to_user (message_id, user_uid, is_owner, is_tagged, has_seen, has_been_notified) VALUES (4, 'mwj7', false, true, false, true)
+
+
+--to test cascade delete
+INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('PArent to delete',2,true,false,current_timestamp,current_timestamp);
+INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited, parent_message_id) VALUES ('Child Message to CASCADE delete',1,false,false,'2019-11-27 21:31:44.490','2019-11-27 21:31:44.490',8);
