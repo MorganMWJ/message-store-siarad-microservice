@@ -48,35 +48,32 @@ public class MessageToUserFacade extends AbstractFacade<MessageToUser> {
     protected EntityManager getEntityManager() {
         return em;
     }
-
-   
     
     /**
-     * If a user has been previously notified about a given by email ?REVISE THIS?
-     * @param uid
-     * @param message
-     * @return 
-     */
-    private boolean hasBeenNotified(String uid, Message message){
-        List<MessageToUser> messageToUsers = super.findAll();
-        for(MessageToUser tuple : messageToUsers){
-            if(tuple.getUserUid().equals(uid) && tuple.getMessageId().equals(message) && !tuple.getHasBeenNotified()){
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    /**
-     * TODO
+     * Get all messages created today that a user has
+     * some association with that but has not yet been notified of .
      * @return 
      */
     public List<Message> getMessagesForDailyEmail(String uid){
-        return null; //TODO
+        List<Message> result = new Vector<Message>();
+        
+        List<MessageToUser> messageToUsers = super.findAll();
+        for(MessageToUser association : messageToUsers){
+            boolean isMessageCreatedToday = association.getMessageId().isCreatedToday();
+            boolean isUserAssociation = association.getUserUid().equals(uid);
+            boolean hasUserBeenNotified = association.getHasBeenNotified();
+            if(isMessageCreatedToday && isUserAssociation && !hasUserBeenNotified){
+                result.add(association.getMessageId());
+                association.setHasBeenNotified(true);
+                super.edit(association);
+            }
+        }       
+        
+        return result;
     }
     
     /**
-     * TODO
+     * Get all replies to all the messages the user owns that he/she has not yet been notified of.
      * @return 
      */
     public List<Message> getMessagesForReplyEmail(String uid){
@@ -85,21 +82,53 @@ public class MessageToUserFacade extends AbstractFacade<MessageToUser> {
         for(Message m : ownedMessages){
             Collection<Message> replies = m.getMessageCollection();
             for(Message reply : replies){
-                if(hasBeenNotified(uid,reply)==false){
-                    result.add(reply);
-                    //TODO set has been notified to true
+                try{
+                    MessageToUser replyAssociation = getMessageAssociation(uid, reply);
+                    if(!replyAssociation.getHasBeenNotified()){
+                        result.add(reply);
+                        replyAssociation.setHasBeenNotified(true); //NEED TO PERSIST
+                        super.edit(replyAssociation);
                 }
+                }catch(NullPointerException e){
+                        //Continue OK
+                    }
+                }
+        }
+        return result;
+    }
+    
+    /**
+     * Get all messages a user is tagged in that he/she has not been notified of yet.
+     * @return 
+     */
+    public List<Message> getMessagesForMentionEmail(String uid){   
+        List<Message> result = new Vector<Message>();
+        List<MessageToUser> messageToUsers = super.findAll();
+        for(MessageToUser tuple : messageToUsers){
+            if(tuple.getUserUid().equals(uid) && tuple.getIsTagged() && !tuple.getHasBeenNotified()){
+                result.add(tuple.getMessageId());
+                tuple.setHasBeenNotified(true); //NEED TO PERSIST THIS
+                super.edit(tuple);
             }
         }
         return result;
     }
     
     /**
-     * TODO
+     * Gets an specific MessageToUser entity given a user id and message.
+     * @param uid
+     * @param message
      * @return 
      */
-    public List<Message> getMessagesForMentionEmail(String uid){       
-        return null; //TODO
+    public MessageToUser getMessageAssociation(String uid, Message message){
+        List<MessageToUser> messageToUsers = super.findAll();
+        for(MessageToUser tuple : messageToUsers){
+            boolean isUser = tuple.getUserUid().equals(uid);
+            boolean isMessage = tuple.getMessageId().equals(message);
+            if(isUser && isMessage){
+                return tuple;
+            }
+        }
+        return null;
     }
-    
 }

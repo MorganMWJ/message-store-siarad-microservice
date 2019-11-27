@@ -93,6 +93,9 @@ public class Message implements Serializable {
     @ManyToOne
     @XmlInverseReference(mappedBy="messageCollection")
     private Message parentMessageId;
+    @OneToMany(mappedBy = "messageId")
+    @XmlTransient
+    private Collection<MessageToUser> messageToUserCollection;
     public Message() {
     }
 
@@ -188,14 +191,23 @@ public class Message implements Serializable {
     public Message getParentMessageId() {
         return parentMessageId;
     }
-    
-//    @XmlElement(name="parent_id")
-//    public Integer setParentMessageId() {
-//        return parentMessageId.getId();
-//    }
 
     public void setParentMessageId(Message parentMessageId) {
         this.parentMessageId = parentMessageId;
+    }
+    
+    @XmlTransient
+    public Collection<MessageToUser> getMessageToUserCollection(){
+        return messageToUserCollection;
+    }
+    
+    public void setMessageToUserCollection(Collection<MessageToUser> messageToUserCollection){
+        this.messageToUserCollection = messageToUserCollection;
+    }
+    
+    public boolean isCreatedToday(){
+        final long DAY = 24 * 60 * 60 * 1000;
+        return this.timeCreated.getTime() > System.currentTimeMillis() - DAY;
     }
 
     @Override

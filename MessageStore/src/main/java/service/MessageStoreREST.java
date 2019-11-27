@@ -210,7 +210,12 @@ public class MessageStoreREST {
     @Path("mentions/{uid}")
     @Produces("application/json")
     public Response getMentionSummary(@PathParam("uid") String uid){        
-        return null;
+        List<Message> messages = messageToUserFacade.getMessagesForMentionEmail(uid);     
+                
+        return Response
+            .status(Response.Status.OK)
+            .entity(messages)
+            .build();
     }
     
     /**
@@ -222,7 +227,12 @@ public class MessageStoreREST {
     @Path("daily/{uid}")
     @Produces("application/json")
     public Response getDailySummary(@PathParam("uid") String uid){        
-        return null;
+        List<Message> messages = messageToUserFacade.getMessagesForDailyEmail(uid);     
+                
+        return Response
+            .status(Response.Status.OK)
+            .entity(messages)
+            .build();
     }
     
     /**
