@@ -130,6 +130,29 @@ public class MessageStoreREST {
         
         return Response.status(Status.OK).build();
     }
+    
+    /**
+     * Marks a message as deleted.
+     * @param id
+     * @return 404 if message does not exist, 200 Ok otherwise.
+     */
+    @POST
+    @Path("delete/{id}")
+    public Response markDeleted(@PathParam("id") Integer id){
+        LOG.log(Level.INFO, "ENTRY to markDeleted() action. URL Path Parameter: {0}. Reponding to POST.", id);
+        
+        Message message = messageFacade.find(id);
+        if(message == null){
+            LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
+            return Response.status(404).build();
+        }
+        
+        message.setIsDeleted(true);
+        messageFacade.edit(message);
+        LOG.info("Message successfully marked as deleted.");
+        
+        return Response.status(Status.OK).build();
+    }
 
     /**
      * Delete a specific message.
@@ -210,8 +233,9 @@ public class MessageStoreREST {
     
     /**
      * Get the messages required for a given user's reply summary.
+     * Must be POST because not idempotent.
      * @param uid
-     * @return
+     * @return Response containing the messages
      */
     @GET
     @Path("replies/{uid}")
@@ -227,8 +251,9 @@ public class MessageStoreREST {
     
     /**
      * Get the messages required for a given user's mentions summary.
+     * Must be POST because not idempotent.
      * @param uid
-     * @return
+     * @return Response containing the messages
      */
     @GET
     @Path("mentions/{uid}")
@@ -244,8 +269,9 @@ public class MessageStoreREST {
     
     /**
      * Get the messages required for a given user's daily summary.
+     * Must be POST because not idempotent. 
      * @param uid
-     * @return
+     * @return Response containing the messages
      */
     @GET
     @Path("daily/{uid}")

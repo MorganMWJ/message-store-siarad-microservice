@@ -28,7 +28,6 @@ import javax.validation.constraints.Size;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 import org.eclipse.persistence.oxm.annotations.XmlInverseReference;
 
@@ -38,14 +37,12 @@ import org.eclipse.persistence.oxm.annotations.XmlInverseReference;
  */
 @Entity
 @Table(name = "message")
-@XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 @NamedQueries({
     @NamedQuery(name = "Message.findAll", query = "SELECT m FROM Message m")
     , @NamedQuery(name = "Message.findById", query = "SELECT m FROM Message m WHERE m.id = :id")
     , @NamedQuery(name = "Message.findByBody", query = "SELECT m FROM Message m WHERE m.body = :body")
     , @NamedQuery(name = "Message.findByIsDeleted", query = "SELECT m FROM Message m WHERE m.isDeleted = :isDeleted")
-    , @NamedQuery(name = "Message.findByHasReplies", query = "SELECT m FROM Message m WHERE m.hasReplies = :hasReplies")
     , @NamedQuery(name = "Message.findByTimeCreated", query = "SELECT m FROM Message m WHERE m.timeCreated = :timeCreated")
     , @NamedQuery(name = "Message.findByTimeEdited", query = "SELECT m FROM Message m WHERE m.timeEdited = :timeEdited")
     , @NamedQuery(name = "Message.findByGroupId", query = "SELECT m FROM Message m WHERE m.groupId = :groupId")})
@@ -69,10 +66,6 @@ public class Message implements Serializable {
     @NotNull
     @Column(name = "is_deleted")
     private boolean isDeleted;
-    @Basic(optional = false)
-    @NotNull
-    @Column(name = "has_replies")
-    private boolean hasReplies;
     @Basic(optional = false)
     @NotNull
     @Column(name = "time_created")
@@ -103,12 +96,11 @@ public class Message implements Serializable {
         this.id = id;
     }
 
-    public Message(Integer id, String body, String ownerUid, boolean isDeleted, boolean hasReplies, Date timeCreated, Date timeEdited, int groupId) {
+    public Message(Integer id, String body, String ownerUid, boolean isDeleted, Date timeCreated, Date timeEdited, int groupId) {
         this.id = id;
         this.body = body;
         this.ownerUid = ownerUid;
         this.isDeleted = isDeleted;
-        this.hasReplies = hasReplies;
         this.timeCreated = timeCreated;
         this.timeEdited = timeEdited;
         this.groupId = groupId;
@@ -146,12 +138,8 @@ public class Message implements Serializable {
         this.isDeleted = isDeleted;
     }
 
-//    public boolean getHasReplies() {
-//        return hasReplies;
-//    }
-
-    public void setHasReplies(boolean hasReplies) {
-        this.hasReplies = hasReplies;
+    public boolean getHasReplies() {
+        return messageCollection.isEmpty();
     }
 
     public Date getTimeCreated() {

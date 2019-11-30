@@ -8,17 +8,17 @@ DELETE FROM message;
 ALTER SEQUENCE message_id_seq RESTART;
 
 --insert some messages
-INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('First Message Body',1,false,false,'2019-11-27 21:09:44.490','2019-11-27 21:09:44.490');
-INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('Second Message Body Content mentions @mwj7',1,false,false,'2019-11-27 21:31:44.490','2019-11-27 21:31:44.490');
-INSERT INTO message (body, owner_uid, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('Third Message - Parent Message','mwj7',1,true,false,'2019-11-27 21:31:44.490','2019-11-27 21:31:44.490');
-INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('Message in different group',2,false,false,current_timestamp,current_timestamp); --try auto current time 
+INSERT INTO message (body, group_id, is_deleted, time_created, time_edited) VALUES ('First Message Body',1,false,'2019-11-27 21:09:44.490','2019-11-27 21:09:44.490');
+INSERT INTO message (body, group_id, is_deleted, time_created, time_edited) VALUES ('Second Message Body Content mentions @mwj7',1,false,current_timestamp,current_timestamp);
+INSERT INTO message (body, owner_uid, group_id, is_deleted, time_created, time_edited) VALUES ('Third Message - Parent Message','mwj7',1,false,current_timestamp,current_timestamp);
+INSERT INTO message (body, group_id, is_deleted, time_created, time_edited) VALUES ('Message in different group',2,false,current_timestamp,current_timestamp); --try auto current time 
 
 --insert child message
-INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited, parent_message_id) VALUES ('Child Message Body',1,false,false,'2019-11-27 21:31:44.490','2019-11-27 21:31:44.490',3);
+INSERT INTO message (body, group_id, is_deleted, time_created, time_edited, parent_message_id) VALUES ('Child Message Body',1,false,current_timestamp,current_timestamp,3);
 
 --insert some messages owned by a user
-INSERT INTO message (body, owner_uid, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('mwj7 - first message','mwj7',1,false,false,'2019-11-27 15:47:44.490','2019-11-27 16:47:44.490');
-INSERT INTO message (body, owner_uid, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('mwj7 - second message','mwj7',1,false,false,'2019-11-27 15:47:44.490','2019-11-27 16:47:44.490');
+INSERT INTO message (body, owner_uid, group_id, is_deleted, time_created, time_edited) VALUES ('mwj7 - first message','mwj7',1,false,current_timestamp,current_timestamp);
+INSERT INTO message (body, owner_uid, group_id, is_deleted, time_created, time_edited) VALUES ('mwj7 - second message','mwj7',1,false,current_timestamp,current_timestamp);
 
 
 --restart auto id sequence upon redeployment
@@ -39,5 +39,5 @@ INSERT INTO message_to_user (message_id, user_uid, is_owner, is_tagged, has_seen
 
 
 --to test cascade delete
-INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited) VALUES ('PArent to delete',2,true,false,current_timestamp,current_timestamp);
-INSERT INTO message (body, group_id, has_replies, is_deleted, time_created, time_edited, parent_message_id) VALUES ('Child Message to CASCADE delete',1,false,false,'2019-11-27 21:31:44.490','2019-11-27 21:31:44.490',8);
+INSERT INTO message (body, group_id, is_deleted, time_created, time_edited) VALUES ('PArent to delete',2,false,current_timestamp,current_timestamp);
+INSERT INTO message (body, group_id, is_deleted, time_created, time_edited, parent_message_id) VALUES ('Child Message to CASCADE delete',1,false,'2019-11-27 21:31:44.490','2019-11-27 21:31:44.490',8);
