@@ -84,11 +84,39 @@ public class MessageStoreREST {
         }
         
         /* Create associations for those users tagged in the new message */
-        ArrayList<String> tags = messageToUserFacade.parseMessageTags(entity);
+        ArrayList<String> tags = entity.parseMessageTags();
         messageToUserFacade.createAssociationsForTaggedUsers(tags, entity);
         
         Link lnk = Link.fromUri(uriInfo.getPath() + "/" + entity.getId()).rel("self").build();
         return Response.status(Response.Status.CREATED).location(lnk.getUri()).build();
+    }
+    
+    /**
+     * Creates a new association (MessageToUser entity) between a user and a message.
+     * If the association already exists the action does nothing.
+     * @param id - Message ID
+     * @param uid - User ID
+     * @return 404 NOT FOUND if message does not exist, otherwise 200 OK response. 
+     */
+    @POST
+    @Path("{id}/{uid}")
+    public Response createAssociation(@PathParam("id") Integer id, @PathParam("uid") String uid){
+        Object[] params = { id, uid }; 
+        LOG.log(Level.INFO, "ENTRY to createAssociation() action.  URL Path parameter: id={0} and uid={1}.", params);
+        
+        Message message = messageFacade.find(id);
+        if(message == null){
+            LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
+            return Response.status(404).build();
+        }
+        
+        if(!message.hasAssociation(uid)){
+            /* Create a default association for the user */
+            MessageToUser association = new MessageToUser(null, uid, false, false, false, false, message);
+            messageToUserFacade.create(association);
+        }
+        
+        return Response.status(Status.OK).build();
     }
 
     /**
@@ -113,6 +141,7 @@ public class MessageStoreREST {
         /* Not allowed to update parent message ID */
         if(entity.getParentMessageId() != message.getParentMessageId()){
             LOG.log(Level.SEVERE, "Not allowed to update parent message ID.");
+            return Response.status(Status.BAD_REQUEST).build();
         }
         
         /* In case id=null ensure the id is set on the entity so merge() will update it */
@@ -121,12 +150,47 @@ public class MessageStoreREST {
         /* Keep the messages replies so an update will not remove them all as children */
         entity.setMessageCollection(message.getMessageCollection());
         
+        /* Untag all users of a message before saving the updated version and paring the new tagged users */
+        entity.untagUsers(); //CHECK THIS?
+        
         messageFacade.edit(entity);        
         LOG.info("Message successfully updated.");
         
         /* Create associations for those users tagged in the new message */
-        ArrayList<String> tags = messageToUserFacade.parseMessageTags(entity);
+        ArrayList<String> tags = entity.parseMessageTags();
         messageToUserFacade.createAssociationsForTaggedUsers(tags, entity);
+        
+        return Response.status(Status.OK).build();
+    }
+    
+    /**
+     * Marks a message as having been seen by a user.
+     * @param id
+     * @param uid
+     * @return 404 NOT FOUND if message doesn't exist. 
+     * 400 BAD REQUEST if there is no association between user and message.
+     * 200 OK otherwise.
+     */
+    @POST
+    @Path("{id}/seen")
+    @Consumes("text/plain")
+    public Response markAsSeen(@PathParam("id") Integer id, String uid){
+        LOG.log(Level.INFO, "ENTRY to markAsSeen() action.");
+        
+        Message message = messageFacade.find(id);
+        if(message == null){
+            LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
+            return Response.status(404).build();
+        }
+        
+        MessageToUser assoc = message.getAssociation(uid);
+        if(assoc==null){
+            return Response.status(400).build(); //bad request
+        }
+        
+        assoc.setHasSeen(true);
+        messageToUserFacade.edit(assoc);
+        LOG.log(Level.INFO, "Message id={0} successfully marked as seen.", id);
         
         return Response.status(Status.OK).build();
     }

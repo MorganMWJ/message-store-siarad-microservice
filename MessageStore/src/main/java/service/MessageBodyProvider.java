@@ -6,12 +6,14 @@
 package service;
 
 import entities.Message;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.ws.rs.Consumes;
@@ -23,9 +25,11 @@ import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
 import org.eclipse.persistence.jaxb.MarshallerProperties;
 import org.eclipse.persistence.jaxb.UnmarshallerProperties;
 
@@ -36,7 +40,7 @@ import org.eclipse.persistence.jaxb.UnmarshallerProperties;
 @Provider
 @Produces("application/json")
 @Consumes("application/json")
-public class MessageMessageBodyWriter implements MessageBodyWriter<Message>, MessageBodyReader<Message>{
+public class MessageBodyProvider implements MessageBodyWriter<Message>, MessageBodyReader<Message>{
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
@@ -58,7 +62,7 @@ public class MessageMessageBodyWriter implements MessageBodyWriter<Message>, Mes
             jaxbMarshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);              
             //Set JSON type
             jaxbMarshaller.setProperty(MarshallerProperties.MEDIA_TYPE, "application/json");
-            jaxbMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, true);
+            jaxbMarshaller.setProperty(MarshallerProperties.JSON_INCLUDE_ROOT, false);
             //Overloaded methods to marshal to different outputs            
             jaxbMarshaller.marshal(t, new PrintWriter(System.out));            
             jaxbMarshaller.marshal(t, entityStream);    
@@ -75,7 +79,8 @@ public class MessageMessageBodyWriter implements MessageBodyWriter<Message>, Mes
     @Override
     public Message readFrom(Class<Message> type, Type genericType, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, String> httpHeaders, InputStream entityStream) throws IOException, WebApplicationException {
         Message deserialisedMessage = null;
-        JAXBContext jaxbContext;
+        JAXBContext jaxbContext;  
+        
         try
         {
             jaxbContext = JAXBContext.newInstance(Message.class);
@@ -83,9 +88,10 @@ public class MessageMessageBodyWriter implements MessageBodyWriter<Message>, Mes
              
             //Set JSON type
             jaxbUnmarshaller.setProperty(UnmarshallerProperties.MEDIA_TYPE, "application/json");
-            jaxbUnmarshaller.setProperty(UnmarshallerProperties.JSON_INCLUDE_ROOT, true);
-             
-            deserialisedMessage = (Message) jaxbUnmarshaller.unmarshal(entityStream);             
+            jaxbUnmarshaller.setProperty(UnmarshallerProperties.JSON_INCLUDE_ROOT, false);
+            
+            JAXBElement<Message> xmlRootElement = jaxbUnmarshaller.unmarshal(new StreamSource(entityStream), Message.class);
+            deserialisedMessage = (Message) xmlRootElement.getValue();    
             System.out.println(deserialisedMessage);
         }
         catch (JAXBException ex) 

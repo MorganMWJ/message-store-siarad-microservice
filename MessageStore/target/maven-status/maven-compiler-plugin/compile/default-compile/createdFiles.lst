@@ -1,6 +1,7 @@
 service\MessageToUserFacade.class
 entities\Message_.class
 service\MessageFacade.class
+service\MessageBodyProvider.class
 service\MessageStoreREST.class
 service\AbstractFacade.class
 service\MessageListMessageBodyWriter.class
@@ -8,4 +9,3 @@ entities\MessageToUser.class
 service\ApplicationConfig.class
 entities\Message.class
 entities\MessageToUser_.class
-service\MessageMessageBodyWriter.class

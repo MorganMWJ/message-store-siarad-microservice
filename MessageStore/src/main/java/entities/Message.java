@@ -6,8 +6,10 @@
 package entities;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -25,10 +27,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlTransient;
+import javax.xml.bind.annotation.*;
 import org.eclipse.persistence.oxm.annotations.XmlInverseReference;
 
 /**
@@ -38,6 +37,7 @@ import org.eclipse.persistence.oxm.annotations.XmlInverseReference;
 @Entity
 @Table(name = "message")
 @XmlAccessorType(XmlAccessType.FIELD)
+//@XmlRootElement(name = "message")
 @NamedQueries({
     @NamedQuery(name = "Message.findAll", query = "SELECT m FROM Message m")
     , @NamedQuery(name = "Message.findById", query = "SELECT m FROM Message m WHERE m.id = :id")
@@ -86,7 +86,7 @@ public class Message implements Serializable {
     @ManyToOne
     @XmlInverseReference(mappedBy="messageCollection")
     private Message parentMessageId;
-    @OneToMany(mappedBy = "messageId")
+    @OneToMany(mappedBy = "messageId", cascade = CascadeType.REMOVE)
     @XmlTransient
     private Collection<MessageToUser> messageToUserCollection;
     public Message() {
@@ -196,6 +196,60 @@ public class Message implements Serializable {
     public boolean isCreatedToday(){
         final long DAY = 24 * 60 * 60 * 1000;
         return this.timeCreated.getTime() > System.currentTimeMillis() - DAY;
+    }
+    
+    /**
+     * Set isTagged=false for all users associated with this message.
+     */
+    public void untagUsers(){
+        for(MessageToUser assoc : this.messageToUserCollection){
+            assoc.setIsTagged(false);
+        }
+    }
+    
+    /**
+     * Gets an specific MessageToUser entity given a user id and message.
+     * Null if no association exists.
+     * @param uid
+     * @param message
+     * @return 
+     */
+    public MessageToUser getAssociation(String uid){
+        for(MessageToUser association : messageToUserCollection){
+            boolean isUser = association.getUserUid().equals(uid);
+            if(isUser){
+                return association;
+            }
+        }
+        return null;
+    }
+    
+    /**
+     * Returns true if user is already associated with the message.
+     * @param uid
+     * @return 
+     */
+    public boolean hasAssociation(String uid){
+        return this.getAssociation(uid)!=null;
+    }
+    
+    /**
+     * Extract the user IDs of the tagged individuals in a message.
+     * @param message
+     * @return List of User ids
+     */
+    public ArrayList<String> parseMessageTags(){
+        ArrayList<String> tags = new ArrayList<>();
+        String messageBody = this.body;        
+        String[] words = messageBody.split(" ");
+        for ( String word : words) {
+            if(word.charAt(0)=='@'){
+                String uid = word.substring(1);
+                tags.add(uid);
+            }
+        }
+        
+        return tags;
     }
 
     @Override

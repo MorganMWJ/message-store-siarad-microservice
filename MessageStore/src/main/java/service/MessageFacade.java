@@ -57,4 +57,5 @@ public class MessageFacade extends AbstractFacade<Message>{
         }
         return result;
     }
+   
 }
