@@ -27,7 +27,7 @@ public class MessageFacade extends AbstractFacade<Message>{
     /**
      * Entity Manager to interact with persistence context (PostgreSQL Database).
      */
-    @PersistenceContext(unitName = "com.mycompany_RestJpa_war_1.0-SNAPSHOTPU")
+    @PersistenceContext(unitName = "MessageStore-1.0-SNAPSHOT")
     private EntityManager em;
 
     public MessageFacade() {
