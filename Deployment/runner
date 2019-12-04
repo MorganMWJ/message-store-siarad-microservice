@@ -1,0 +1,5 @@
+#!/bin/sh
+docker stop ms-mwj7
+docker rm ms-mwj7
+docker build -t message_store .
+docker run -d --name ms-mwj7 -p 8280:8080 -p 4248:4848 -p 8281:8181 message_store

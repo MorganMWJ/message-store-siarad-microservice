@@ -1,0 +1,38 @@
+FROM openjdk:8-jdk
+ENV GLASSFISH_HOME /usr/local/glassfish
+ENV PATH ${GLASSFISH_HOME}/bin:$PATH
+ENV GLASSFISH_PKG latest-glassfish.zip
+ENV GLASSFISHV glassfish5
+ENV GLASSFISH_URL https://download.oracle.com/glassfish/5.0/nightly/latest-glassfish.zip
+ENV DEPLOYMENT_DIR ${GLASSFISH_HOME}/glassfish/domains/domain1/autodeploy/
+
+RUN mkdir -p ${GLASSFISH_HOME}
+
+WORKDIR ${GLASSFISH_HOME}
+
+RUN set -x &&\
+   curl -fSL ${GLASSFISH_URL} -o ${GLASSFISH_PKG} &&\ 
+   unzip -o $GLASSFISH_PKG &&\ 
+   rm -f $GLASSFISH_PKG &&\ 
+   mv ${GLASSFISHV}/* ${GLASSFISH_HOME} &&\ 
+   rm -Rf ${GLASSFISHV}
+
+RUN addgroup glassfish_grp &&\
+  adduser --system glassfish &&\
+  usermod -G glassfish_grp glassfish &&\
+  chown -R glassfish:glassfish_grp ${GLASSFISH_HOME} &&\
+  chmod -R 777 ${GLASSFISH_HOME}
+
+#move war to auto deploy directory
+COPY MessageStore-1.0-SNAPSHOT.war ${DEPLOYMENT_DIR}
+
+COPY docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh
+
+USER glassfish
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+EXPOSE 4848 8080 8181
+CMD ["asadmin", "start-domain", "-v"]
+
