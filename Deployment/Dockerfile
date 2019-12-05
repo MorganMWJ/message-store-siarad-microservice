@@ -12,7 +12,9 @@ RUN useradd -b /opt -m -s /bin/sh -d ${INSTALL_DIR} serveradmin ;  echo serverad
     ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/bin/asadmin start-domain ${DOMAIN_NAME} \
     && ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/bin/asadmin --user admin --passwordfile /tmp/pwd.txt change-admin-password ; \
     echo -e "AS_ADMIN_PASSWORD=admin\n" > /tmp/pwd.txt ; \
-    ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/bin/asadmin --user admin --passwordfile /tmp/pwd.txt  enable-secure-admin ;\
+    ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/bin/asadmin --user admin --passwordfile /tmp/pwd.txt  enable-secure-admin ; \
+    ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/bin/asadmin --user admin --passwordfile /tmp/pwd.txt create-jdbc-connection-pool --datasourceclassname org.postgresql.ds.PGConnectionPoolDataSource --property User=admin:PortNumber=5100:Password=admin:ServerName=m56-docker1.dcs.aber.ac.uk:DatabaseName=message_store message_store_db_pool ; \
+    ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/bin/asadmin --user admin --passwordfile /tmp/pwd.txt create-jdbc-resource --connectionpoolid message_store_db_pool jdbc/messageStoreOffCampusDBRes ; \
     rm /tmp/pwd.txt ; \
     ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/bin/asadmin stop-domain ${DOMAIN_NAME} \
     && ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/bin/asadmin stop-database \
@@ -21,24 +23,29 @@ RUN useradd -b /opt -m -s /bin/sh -d ${INSTALL_DIR} serveradmin ;  echo serverad
 	
 ENV GLASSFISH_HOME ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/glassfish
 ENV DEPLOYMENT_DIR ${GLASSFISH_HOME}/domains/domain1/autodeploy
-ENV JDBC_DRIVER_URL https://jdbc.postgresql.org/download/postgresql-42.2.5.jar
+#ENV JDBC_DRIVER_URL https://jdbc.postgresql.org/download/postgresql-42.2.5.jar
 ENV DRIVER_DIR ${GLASSFISH_HOME}/domains/domain1/lib/
 
 WORKDIR ${GLASSFISH_HOME}/bin
 
+#install wget
+#RUN yum -y update && yum -y install wget
+
 #download postgres jdbc drvier and add it to glassfish
-RUN wget ${JDBC_DRIVER_URL}
-RUN mv postgresql-42.2.5.jar ${DRIVER_DIR}
+#RUN wget ${JDBC_DRIVER_URL}
+COPY postgresql-42.2.5.jar ${DRIVER_DIR}
 
 #move war to auto deploy directory
 COPY MessageStore-1.0-SNAPSHOT.war ${DEPLOYMENT_DIR}
 
-COPY docker-entrypoint.sh /
-RUN chmod +x /docker-entrypoint.sh
+#COPY docker-entrypoint.sh /
+#RUN chmod +x /docker-entrypoint.sh
+
+ENTRYPOINT asadmin start-database && asadmin start-domain --verbose ${DOMAIN_NAME}
 
 USER serveradmin
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+#ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 4848 8009 8080 8181 1527
-CMD ["asadmin", "start-domain", "-v"]
+#CMD ["asadmin", "start-domain", "-v"]
