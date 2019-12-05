@@ -18,9 +18,27 @@ RUN useradd -b /opt -m -s /bin/sh -d ${INSTALL_DIR} serveradmin ;  echo serverad
     && ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/bin/asadmin stop-database \
     && chown -R serveradmin:serveradmin /opt ; \
     chmod -R a+rw /opt 
+	
 ENV GLASSFISH_HOME ${INSTALL_DIR}/${GLASSFISH_ARCHIVE}/glassfish
 ENV DEPLOYMENT_DIR ${GLASSFISH_HOME}/domains/domain1/autodeploy
+ENV JDBC_DRIVER_URL https://jdbc.postgresql.org/download/postgresql-42.2.5.jar
+ENV DRIVER_DIR ${GLASSFISH_HOME}/domains/domain1/lib/
+
 WORKDIR ${GLASSFISH_HOME}/bin
-ENTRYPOINT asadmin start-database && asadmin start-domain --verbose ${DOMAIN_NAME} 
+
+#download postgres jdbc drvier and add it to glassfish
+RUN wget ${JDBC_DRIVER_URL}
+RUN mv postgresql-42.2.5.jar ${DRIVER_DIR}
+
+#move war to auto deploy directory
+COPY MessageStore-1.0-SNAPSHOT.war ${DEPLOYMENT_DIR}
+
+COPY docker-entrypoint.sh /
+RUN chmod +x /docker-entrypoint.sh
+
 USER serveradmin
+
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
 EXPOSE 4848 8009 8080 8181 1527
+CMD ["asadmin", "start-domain", "-v"]
