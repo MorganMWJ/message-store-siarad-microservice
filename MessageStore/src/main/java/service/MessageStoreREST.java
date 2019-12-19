@@ -118,6 +118,37 @@ public class MessageStoreREST {
         
         return Response.status(Status.OK).build();
     }
+    
+    /**
+     * Creates multiple new associations (MessageToUser entities) between a list of users and a message.
+     * An association is only created if one does not already exist for that user.
+     * @param id - Message ID
+     * @param uidsCSV - A comma separated list of users IDs.
+     * @return 404 NOT FOUND if message does not exist, otherwise 200 OK response.
+     */
+    @POST
+    @Path("{id}")
+    @Consumes("text/plain")
+    public Response createAssociations(@PathParam("id") Integer id, String uidsCSV){
+        LOG.log(Level.INFO, "ENTRY to createAssociations() action.  Request body content: {0}", uidsCSV);
+        
+        Message message = messageFacade.find(id);
+        if(message == null){
+            LOG.log(Level.WARNING, "Message with id {0} does not exist.", id);
+            return Response.status(404).build();
+        }
+        
+        String[] uids = uidsCSV.split(",");        
+        for(String uid : uids){
+            if(!message.hasAssociation(uid)){
+                /* Create a default association for the user */
+                MessageToUser association = new MessageToUser(null, uid, false, false, false, false, message);
+                messageToUserFacade.create(association);
+            }
+        }
+        
+        return Response.status(Status.OK).build();
+    }
 
     /**
      * Updates a single message.
