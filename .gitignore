@@ -1,1 +1,3 @@
-/MessageStore/target
+/nbproject/
+/MessageStore/target/*
+*.class
