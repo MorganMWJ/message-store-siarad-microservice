@@ -181,6 +181,9 @@ public class MessageStoreREST {
         /* Keep the messages replies so an update will not remove them all as children */
         entity.setMessageCollection(message.getMessageCollection());
         
+        /* Keep users associated with the message */
+        entity.setMessageToUserCollection(message.getMessageToUserCollection());
+        
         /* Untag all users of a message before saving the updated version and paring the new tagged users */
         entity.untagUsers(); //CHECK THIS?
         
