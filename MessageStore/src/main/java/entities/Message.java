@@ -138,8 +138,9 @@ public class Message implements Serializable {
         this.isDeleted = isDeleted;
     }
 
+    @XmlElement
     public boolean getHasReplies() {
-        return messageCollection.isEmpty();
+        return !messageCollection.isEmpty();
     }
 
     public Date getTimeCreated() {
